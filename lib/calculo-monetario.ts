@@ -98,20 +98,25 @@ function diasExatosEntre(inicio: Date, fim: Date): number {
 
 // Função para calcular IGP-M acumulado nos últimos 12 meses (fórmula da FGV)
 // IGP-M acumulado = (1 + m1) × (1 + m2) × ... × (1 + m12) − 1
-function calcularIGPMAcumulado12Meses(indices: IndiceData[]): number {
-  if (indices.length === 0) return 0
+function calcularIGPMAcumulado12Meses(indices: IndiceData[]): { valor: number; detalhes: IndiceData[] } {
+  if (indices.length === 0) return { valor: 0, detalhes: [] }
   
-  // Pegar os últimos 12 meses (ou menos se não houver 12)
-  const ultimosMeses = indices.slice(-12)
+  // Usar exatamente os 12 meses passados (não fazer slice adicional)
+  const mesesUsados = indices.length >= 12 ? indices.slice(-12) : indices
   
   let fatorAcumulado = 1
-  for (const indice of ultimosMeses) {
+  for (const indice of mesesUsados) {
     const fatorMensal = 1 + indice.valor / 100
     fatorAcumulado *= fatorMensal
   }
   
   // Resultado em percentual
-  return (fatorAcumulado - 1) * 100
+  const igpmAcumuladoPercentual = (fatorAcumulado - 1) * 100
+  
+  return {
+    valor: igpmAcumuladoPercentual,
+    detalhes: mesesUsados
+  }
 }
 
 // Função para aplicar regra de ciclos de 12 parcelas com reajuste IGP-M acumulado
@@ -139,21 +144,23 @@ function aplicarCicloParcelasIGPM(
     } else {
       // Para ciclos subsequentes, aplicar o IGP-M acumulado dos 12 meses anteriores
       // Este reajuste é aplicado no primeiro mês do novo ciclo
-      const igpmAcumulado = calcularIGPMAcumulado12Meses(indices.slice(cicloInicio - 12, cicloInicio))
+      const indicesCicloAnterior = indices.slice(cicloInicio - 12, cicloInicio)
+      const igpmInfo = calcularIGPMAcumulado12Meses(indicesCicloAnterior)
+      const igpmAcumulado = igpmInfo.valor
       
-      // Primeiro mês do ciclo recebe o reajuste acumulado
+      // Primeiro mês do ciclo recebe o reajuste acumulado com marcação especial
       resultado.push({
         mes: cicloMeses[0].mes,
         ano: cicloMeses[0].ano,
         valor: igpmAcumulado,
       })
       
-      // Meses seguintes do ciclo (2 a 12) mantêm valor fixo
+      // Meses seguintes do ciclo (2 a 12) mantêm valor fixo (0 = sem variação)
       for (let i = 1; i < cicloMeses.length; i++) {
         resultado.push({
           mes: cicloMeses[i].mes,
           ano: cicloMeses[i].ano,
-          valor: 0, // Sem variação
+          valor: 0, // Sem variação - valor fixo durante o ciclo
         })
       }
     }
@@ -529,48 +536,66 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
       // Aplicar índices principais (com detalhamento melhorado para IGP-M)
       let contadorParcelas = 0
       let cicloAtual = 1
-      let mesInicioCiclo = 0
       
       if (nomeIndice === "IGP-M" && indicesDBPeriodo.length > 12) {
         memoriaCalculo.push(`=== DETALHAMENTO COM REAJUSTE A CADA 12 MESES (FÓRMULA IGP-M ACUMULADO) ===`)
         memoriaCalculo.push(``)
         memoriaCalculo.push(`Fórmula aplicada: IGP-M acumulado = (1 + m1) × (1 + m2) × ... × (1 + m12) − 1`)
         memoriaCalculo.push(``)
+        memoriaCalculo.push(`CICLO 1 (Meses 1-12): Aplicar índices normais do período`)
+        memoriaCalculo.push(``)
       }
       
       indicesDBPeriodo.forEach((indice, index) => {
         contadorParcelas = index + 1
         const posicaoNoCiclo = ((contadorParcelas - 1) % 12) + 1
+        const cicloAtualMes = Math.floor((contadorParcelas - 1) / 12) + 1
         
-        // Detectar início de novo ciclo
-        if (posicaoNoCiclo === 1 && contadorParcelas > 1) {
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`--- CICLO ${cicloAtual} FINALIZADO ---`)
-          memoriaCalculo.push(``)
-          cicloAtual++
-          
-          // Se foi aplicado reajuste IGP-M, mostrar o cálculo
-          if (nomeIndice === "IGP-M" && mesInicioCiclo > 0) {
-            const cicloAnterior = indicesDBPeriodo.slice(Math.max(0, mesInicioCiclo - 12), mesInicioCiclo)
-            if (cicloAnterior.length > 0) {
-              let fatorReajuste = 1
-              memoriaCalculo.push(`Reajuste IGP-M acumulado dos 12 meses anteriores:`)
-              cicloAnterior.forEach((m, idx) => {
-                const fator = 1 + m.valor / 100
-                fatorReajuste *= fator
-                const mesNomePrev = [
-                  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-                ][m.mes - 1]
-                memoriaCalculo.push(`  ${idx + 1}. ${mesNomePrev}/${m.ano}: ${m.valor.toFixed(4)}% → Fator: ${fator.toFixed(6)}`)
-              })
-              const reajuste = (fatorReajuste - 1) * 100
-              memoriaCalculo.push(`Reajuste total: ${reajuste.toFixed(6)}%`)
-              memoriaCalculo.push(``)
-            }
+        // Mostrar indicador de novo ciclo
+        if (posicaoNoCiclo === 1 && contadorParcelas > 1 && nomeIndice === "IGP-M" && indicesDBPeriodo.length > 12) {
+          // Mostrar fim do ciclo anterior
+          const cicloAnterior = indicesDBPeriodo.slice(Math.max(0, index - 12), index)
+          if (cicloAnterior.length === 12) {
+            memoriaCalculo.push(``)
+            memoriaCalculo.push(`--- CICLO ${cicloAtualMes - 1} FINALIZADO ---`)
+            memoriaCalculo.push(``)
+            
+            // Calcular e mostrar o reajuste que será aplicado no próximo ciclo
+            let fatorReajuste = 1
+            const mesesAnterior: string[] = []
+            
+            cicloAnterior.forEach((m, idx) => {
+              const fator = 1 + m.valor / 100
+              fatorReajuste *= fator
+              const mesNomePrev = [
+                "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+              ][m.mes - 1]
+              mesesAnterior.push(`${mesNomePrev}/${m.ano}`)
+            })
+            
+            const reajustePercent = (fatorReajuste - 1) * 100
+            
+            memoriaCalculo.push(`CICLO ${cicloAtualMes} (Meses ${contadorParcelas}-${contadorParcelas + 11}): Aplicar reajuste IGP-M acumulado`)
+            memoriaCalculo.push(``)
+            memoriaCalculo.push(`Reajuste IGP-M acumulado dos 12 meses anteriores (${mesesAnterior[0]} a ${mesesAnterior[11]}):`)
+            memoriaCalculo.push(`Fórmula: (1 + m1) × (1 + m2) × ... × (1 + m12) − 1`)
+            memoriaCalculo.push(``)
+            
+            cicloAnterior.forEach((m, idx) => {
+              const fator = 1 + m.valor / 100
+              const mesNomePrev = [
+                "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+              ][m.mes - 1]
+              memoriaCalculo.push(`  m${idx + 1} (${mesNomePrev}/${m.ano}): 1 + ${m.valor.toFixed(6)}% = ${fator.toFixed(8)}`)
+            })
+            
+            memoriaCalculo.push(``)
+            memoriaCalculo.push(`Cálculo: ${fatorReajuste.toFixed(10)} - 1 = ${reajustePercent.toFixed(8)}%`)
+            memoriaCalculo.push(``)
+            memoriaCalculo.push(`Este reajuste será aplicado no 1º mês do novo ciclo e os demais meses terão valor FIXO.`)
+            memoriaCalculo.push(``)
           }
         }
-        
-        mesInicioCiclo = index
         
         const fatorMensal = 1 + indice.valor / 100
         fatorCorrecao *= fatorMensal
@@ -594,17 +619,19 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         let indicadorCiclo = ""
         if (nomeIndice === "IGP-M" && indicesDBPeriodo.length > 12) {
           if (posicaoNoCiclo === 1 && contadorParcelas > 1) {
-            indicadorCiclo = " ← REAJUSTE CICLO"
+            indicadorCiclo = " ← REAJUSTE CICLO (IGP-M acumulado dos 12 meses anteriores)"
           } else if (posicaoNoCiclo > 1) {
-            indicadorCiclo = " (valor fixo)"
+            indicadorCiclo = " (VALOR FIXO - sem variação neste ciclo)"
           }
         }
         
         memoriaCalculo.push(
-          `${String(contadorParcelas).padStart(2, "0")}. ${mesNome}/${indice.ano}: ${indice.valor.toFixed(4)}% → Fator: ${fatorMensal.toFixed(6)} → Acumulado: ${fatorCorrecao.toFixed(6)}${indicadorCiclo}`,
+          `${String(contadorParcelas).padStart(2, "0")}. ${mesNome}/${indice.ano}: ${indice.valor.toFixed(4).replace(".", ",")}% → Fator: ${fatorMensal.toFixed(6)} → Acumulado: ${fatorCorrecao.toFixed(6)}${indicadorCiclo}`,
         )
       })
       
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`--- CICLO ${cicloAtual} FINALIZADO ---`)
       memoriaCalculo.push(``)
       memoriaCalculo.push(`Total de meses com índices aplicados: ${indicesDBPeriodo.length}`)
     }
