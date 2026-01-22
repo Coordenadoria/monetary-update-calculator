@@ -487,24 +487,29 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
   const isPoupanca = formData.indice.includes("Poupança")
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-5xl">
-        {/* Logo Secretaria da Saúde SP */}
-        <div className="text-center mb-8">
-          <img 
-            src="/images/secretaria-saude-sp.png" 
-            alt="Secretaria da Saúde - São Paulo" 
-            className="w-full max-w-3xl mx-auto mb-6"
-            style={{maxHeight: '70px'}}
-          />
-        </div>
-
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-            <Calculator className="h-8 w-8" />
-            Calculadora de Atualização Monetária - CGOF
-          </h1>
-          <p className="text-gray-600">Calcule correção monetária, juros, multa e honorários</p>
+    <div className="min-h-screen bg-gray-50 py-4">
+      <div className="container mx-auto px-4 max-w-6xl">
+        {/* Cabeçalho compacto e institucional */}
+        <div className="bg-white border-b border-gray-200 -mx-4 px-4 py-3 mb-8">
+          <div className="max-w-6xl mx-auto flex items-center gap-6">
+            {/* Logo à esquerda */}
+            <div className="flex-shrink-0">
+              <img 
+                src="/images/secretaria-saude-sp.png" 
+                alt="Secretaria da Saúde - São Paulo" 
+                className="h-24 w-auto"
+              />
+            </div>
+            
+            {/* Título e descrição à direita */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Calculator className="h-6 w-6 text-blue-600" />
+                Calculadora de Atualização Monetária
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">CGOF - Correção Monetária, Juros, Multa e Honorários</p>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white p-8 rounded-lg shadow-sm border">
