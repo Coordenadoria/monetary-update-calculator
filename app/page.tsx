@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import * as XLSX from "xlsx"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
@@ -274,8 +275,6 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
     if (!resultado?.memoriaCalculo) return
 
     try {
-      const XLSX = await import("xlsx")
-
       // Preparar dados da memória de cálculo
       const memoriaLinhas = resultado.memoriaCalculo
 
