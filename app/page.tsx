@@ -447,13 +447,6 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <img
-              src="/images/secretaria-saude-sp.png"
-              alt="Secretaria da Saúde - São Paulo"
-              className="h-20 w-auto object-contain"
-            />
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
             <Calculator className="h-8 w-8" />
             Calculadora de Atualização Monetária - CGOF
