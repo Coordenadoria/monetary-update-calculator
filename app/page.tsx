@@ -494,8 +494,8 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
           <img 
             src="/images/secretaria-saude-sp.png" 
             alt="Secretaria da Saúde - São Paulo" 
-            className="w-full max-w-4xl mx-auto mb-6"
-            style={{maxHeight: '120px'}}
+            className="w-full max-w-3xl mx-auto mb-6"
+            style={{maxHeight: '70px'}}
           />
         </div>
 
