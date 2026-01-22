@@ -492,7 +492,7 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
         {/* Logo Secretaria da Saúde SP */}
         <div className="text-center mb-8">
           <img 
-            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" 
+            src="/images/secretaria-saude-sp.png" 
             alt="Secretaria da Saúde - São Paulo" 
             className="w-full max-w-4xl mx-auto mb-6"
             style={{maxHeight: '120px'}}
