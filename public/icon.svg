@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Escudo vermelho -->
+  <path d="M 32 4 L 10 16 L 10 28 Q 10 48 32 58 Q 54 48 54 28 L 54 16 Z" fill="#DC143C" stroke="#333333" stroke-width="1"/>
+  
+  <!-- Estrela cinza (5 pontas) no topo -->
+  <g transform="translate(32, 10)">
+    <polygon points="0,-7 2,-2 7,-1 2,2 3,7 0,3 -3,7 -2,2 -7,-1 -2,-2" fill="#888888" stroke="#333333" stroke-width="0.5"/>
+  </g>
+  
+  <!-- Espada prateada -->
+  <g transform="translate(32, 22)">
+    <polygon points="-1.5,-8 -1,-2 0,8 1,-2 1.5,-8" fill="#C0C0C0" stroke="#666666" stroke-width="0.5"/>
+    <rect x="-5" y="10" width="10" height="1.5" fill="#8B6F47" stroke="#333333" stroke-width="0.3"/>
+    <rect x="-1" y="11.5" width="2" height="4" fill="#8B6F47" stroke="#333333" stroke-width="0.3"/>
+    <circle cx="0" cy="16.5" r="1" fill="#FFD700" stroke="#B8860B" stroke-width="0.3"/>
+  </g>
+  
+  <!-- Ramo de louro esquerdo -->
+  <g transform="translate(14, 28)">
+    <path d="M 0 0 Q -1.5 2 -2 4" stroke="#228822" stroke-width="0.8" fill="none"/>
+    <ellipse cx="-0.8" cy="1" rx="0.6" ry="0.8" fill="#228822"/>
+    <ellipse cx="-1.5" cy="2.5" rx="0.6" ry="0.8" fill="#228822"/>
+    <circle cx="-0.3" cy="1.5" r="0.4" fill="#FFD700"/>
+    <circle cx="-1.2" cy="3" r="0.4" fill="#FFD700"/>
+  </g>
+  
+  <!-- Ramo de louro direito -->
+  <g transform="translate(50, 28)">
+    <path d="M 0 0 Q 1.5 2 2 4" stroke="#228822" stroke-width="0.8" fill="none"/>
+    <ellipse cx="0.8" cy="1" rx="0.6" ry="0.8" fill="#228822"/>
+    <ellipse cx="1.5" cy="2.5" rx="0.6" ry="0.8" fill="#228822"/>
+    <circle cx="0.3" cy="1.5" r="0.4" fill="#FFD700"/>
+    <circle cx="1.2" cy="3" r="0.4" fill="#FFD700"/>
+  </g>
+  
+  <!-- Banner na base -->
+  <ellipse cx="32" cy="58" rx="14" ry="2.5" fill="#CC0000" stroke="#333333" stroke-width="0.5"/>
+</svg>
