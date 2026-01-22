@@ -37,6 +37,7 @@ interface FormData {
   multaSobreJuros: boolean
   apresentarMemoria: boolean
   mostrarTransparencia: boolean
+  numeroParcelas: string
 }
 
 export default function CalculadoraAtualizacaoMonetaria() {
@@ -58,6 +59,7 @@ export default function CalculadoraAtualizacaoMonetaria() {
     multaSobreJuros: false,
     apresentarMemoria: false,
     mostrarTransparencia: false,
+    numeroParcelas: "",
   })
 
   const [resultado, setResultado] = useState<ResultadoCalculo | null>(null)
@@ -179,6 +181,7 @@ export default function CalculadoraAtualizacaoMonetaria() {
         ? parseBrazilianNumber(formData.percentualHonorarios)
         : undefined,
       multaSobreJuros: formData.multaSobreJuros,
+      numeroParcelas: formData.numeroParcelas ? Number.parseInt(formData.numeroParcelas) : undefined,
     }
 
     try {
@@ -209,6 +212,7 @@ export default function CalculadoraAtualizacaoMonetaria() {
       multaSobreJuros: false,
       apresentarMemoria: false,
       mostrarTransparencia: false,
+      numeroParcelas: "",
     })
     setResultado(null)
     setErros([])
@@ -957,6 +961,79 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
                     </div>
                   </div>
                 </div>
+
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                {/* PARCELAMENTO                                                   */}
+                {/* ═══════════════════════════════════════════════════════════════ */}
+                <Separator className="mt-6" />
+
+                <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <h4 className="font-semibold mb-4">📋 Parcelamento (Opcional)</h4>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Divida o valor total em parcelas iguais. Digite o número de parcelas desejadas:
+                  </p>
+
+                  <div className="flex gap-3 items-end">
+                    <div className="flex-1">
+                      <Label htmlFor="numeroParcelas" className="text-sm font-medium mb-2 block">
+                        Número de Parcelas
+                      </Label>
+                      <Input
+                        id="numeroParcelas"
+                        type="number"
+                        min="1"
+                        max="360"
+                        placeholder="Ex: 12, 24, 36..."
+                        value={formData.numeroParcelas || ""}
+                        onChange={(e) => handleInputChange("numeroParcelas", e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        if (formData.numeroParcelas) {
+                          executarCalculo()
+                        }
+                      }}
+                      className="mb-0"
+                    >
+                      Calcular Parcelas
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Exibir resultado do parcelamento */}
+                {resultado.parcelamento && (
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+                    <h4 className="font-semibold mb-4 text-green-900">✅ Parcelamento Calculado</h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div>
+                        <p className="text-xs text-gray-600">Número de Parcelas</p>
+                        <p className="text-2xl font-bold text-green-700">{resultado.parcelamento.numeroParcelas}×</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">Valor de Cada Parcela</p>
+                        <p className="text-2xl font-bold text-green-700">
+                          R$ {resultado.parcelamento.valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-600">Total</p>
+                        <p className="text-2xl font-bold text-green-700">
+                          R$ {resultado.parcelamento.valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-gray-600 p-3 bg-white rounded border border-green-100">
+                      <p className="mb-2">
+                        <strong>Observe:</strong> O valor de cada parcela é resultado da divisão do valor total por {resultado.parcelamento.numeroParcelas}.
+                        Confira na Memória de Cálculo (abaixo) o cronograma completo.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {resultado.juros > 0 && (
                   <div className="mt-4 p-4 rounded border bg-white">

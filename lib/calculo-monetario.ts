@@ -54,6 +54,7 @@ export interface ParametrosCalculo {
   percentualHonorarios?: number
   multaSobreJuros?: boolean
   convencaoDias?: "Actual/365" | "Actual/365.2425"
+  numeroParcelas?: number // Número de parcelas para parcelamento
 }
 
 export interface DetalheLinha {
@@ -92,6 +93,12 @@ export interface ResultadoCalculo {
   detalhamentoIGPM?: DetalheLinha[]
   detalhamentoPoupanca?: DetalheLinha[]
   fontes?: string[]
+  // Parcelamento
+  parcelamento?: {
+    numeroParcelas: number
+    valorParcela: number
+    valorTotalParcelado: number
+  }
 }
 
 // Função para calcular diferença em meses e dias
@@ -1203,6 +1210,43 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
   memoriaCalculo.push(`Cálculo realizado em: ${new Date().toLocaleString("pt-BR")}`)
   memoriaCalculo.push(`Sistema: Calculadora de Atualização Monetária - CGOF/SP`)
 
+  // ═════════════════════════════════════════════════════════════════════════════════
+  // PARCELAMENTO
+  // ═════════════════════════════════════════════════════════════════════════════════
+  let parcelamento: { numeroParcelas: number; valorParcela: number; valorTotalParcelado: number } | undefined
+
+  if (parametros.numeroParcelas && parametros.numeroParcelas > 0) {
+    const numeroParcelas = Math.floor(parametros.numeroParcelas)
+    const valorParcela = valorTotal / numeroParcelas
+    const valorTotalParcelado = valorTotal // O total permanece o mesmo, apenas dividido
+
+    parcelamento = {
+      numeroParcelas,
+      valorParcela,
+      valorTotalParcelado,
+    }
+
+    memoriaCalculo.push(``)
+    memoriaCalculo.push(`=== PARCELAMENTO ===`)
+    memoriaCalculo.push(``)
+    memoriaCalculo.push(`Valor total a parcelar: R$ ${valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+    memoriaCalculo.push(`Número de parcelas: ${numeroParcelas}`)
+    memoriaCalculo.push(`Valor de cada parcela: R$ ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+    memoriaCalculo.push(``)
+    memoriaCalculo.push(`Cronograma de Pagamento:`)
+    memoriaCalculo.push(``)
+    memoriaCalculo.push(`| Parcela | Valor (R$) |`)
+    memoriaCalculo.push(`|---------|------------|`)
+
+    for (let i = 1; i <= numeroParcelas; i++) {
+      const valorFormatado = valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      memoriaCalculo.push(`| ${String(i).padStart(7)} | ${valorFormatado.padStart(10)} |`)
+    }
+
+    memoriaCalculo.push(``)
+    memoriaCalculo.push(`Total: R$ ${valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+  }
+
   return {
     valorOriginal: parametros.valorOriginal,
     valorCorrigido,
@@ -1221,6 +1265,7 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     detalhamentoIGPM,
     detalhamentoPoupanca,
     fontes,
+    parcelamento,
   }
 }
 
