@@ -58,9 +58,6 @@ export default function CalculadoraAtualizacaoMonetaria() {
     multaSobreJuros: false,
     apresentarMemoria: false,
     mostrarTransparencia: false,
-    usarIndiceSecundario: false,
-    indiceSecundario: "",
-    parcelaInicioIndiceSecundario: "13",
   })
 
   const [resultado, setResultado] = useState<ResultadoCalculo | null>(null)
@@ -163,11 +160,6 @@ export default function CalculadoraAtualizacaoMonetaria() {
         ? Number.parseFloat(formData.percentualHonorarios)
         : undefined,
       multaSobreJuros: formData.multaSobreJuros,
-      usarIndiceSecundario: formData.usarIndiceSecundario,
-      indiceSecundario: formData.indiceSecundario || undefined,
-      parcelaInicioIndiceSecundario: formData.parcelaInicioIndiceSecundario
-        ? Number.parseInt(formData.parcelaInicioIndiceSecundario)
-        : 13,
     }
 
     try {
@@ -198,9 +190,6 @@ export default function CalculadoraAtualizacaoMonetaria() {
       multaSobreJuros: false,
       apresentarMemoria: false,
       mostrarTransparencia: false,
-      usarIndiceSecundario: false,
-      indiceSecundario: "",
-      parcelaInicioIndiceSecundario: "13",
     })
     setResultado(null)
     setErros([])
@@ -699,57 +688,6 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
                   ))}
                 </SelectContent>
               </Select>
-
-              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Checkbox
-                    id="usarIndiceSecundario"
-                    checked={formData.usarIndiceSecundario}
-                    onCheckedChange={(checked) => handleInputChange("usarIndiceSecundario", checked as boolean)}
-                  />
-                  <Label htmlFor="usarIndiceSecundario" className="font-medium">
-                    Usar índice diferente a partir de determinada parcela
-                  </Label>
-                </div>
-
-                {formData.usarIndiceSecundario && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <Label htmlFor="parcelaInicioIndiceSecundario" className="mb-2 block">
-                        A partir da parcela
-                      </Label>
-                      <Input
-                        id="parcelaInicioIndiceSecundario"
-                        type="number"
-                        min="2"
-                        placeholder="13"
-                        value={formData.parcelaInicioIndiceSecundario}
-                        onChange={(e) => handleInputChange("parcelaInicioIndiceSecundario", e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="indiceSecundario" className="mb-2 block">
-                        Índice secundário
-                      </Label>
-                      <Select
-                        value={formData.indiceSecundario}
-                        onValueChange={(value) => handleInputChange("indiceSecundario", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o índice secundário" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {indicesDisponiveis.map((indice, index) => (
-                            <SelectItem key={index} value={indice}>
-                              {indice}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
 
             <Separator className="my-6" />
