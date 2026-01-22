@@ -396,44 +396,76 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
 
   const atualizarIndicesOficiais = async () => {
     setAtualizandoIndices(true)
-    setMensagemAtualizacao("Iniciando atualização dos índices...")
+    setMensagemAtualizacao("Iniciando atualização dos índices das fontes oficiais...")
 
     try {
-      setMensagemAtualizacao("Buscando dados do FGV (IGP-M)...")
+      setMensagemAtualizacao("Buscando dados do Banco Central e FGV...")
       // Fetch from official sources
       const response = await fetch("/api/atualizar-indices", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          fontes: [
-            "https://portalibre.fgv.br/indicadores/igp-m",
-            "https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9256-ipca.html",
-            "https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9257-inpc.html",
-            "https://www.bcb.gov.br/estabilidadefinanceira/remuneracaopoupanca",
-            "https://www.bcb.gov.br/controleinflacao/taxaselic",
-            "https://www.b3.com.br/pt_br/market-data-e-indices/servicos-de-dados/consultas/taxas-de-referencia/taxa-di-over.htm",
-          ],
-        }),
       })
 
       if (response.ok) {
         const resultado = await response.json()
+        
+        // Salvar dados atualizados no localStorage
+        if (typeof window !== "undefined") {
+          try {
+            // Salvar cada índice no localStorage
+            if (resultado.data?.["IGP-M"]?.length > 0) {
+              localStorage.setItem("indices_IGP-M", JSON.stringify(resultado.data["IGP-M"]))
+            }
+            if (resultado.data?.["IPCA"]?.length > 0) {
+              localStorage.setItem("indices_IPCA", JSON.stringify(resultado.data["IPCA"]))
+            }
+            if (resultado.data?.["INPC"]?.length > 0) {
+              localStorage.setItem("indices_INPC", JSON.stringify(resultado.data["INPC"]))
+            }
+            if (resultado.data?.["Poupança"]?.length > 0) {
+              localStorage.setItem("indices_Poupança", JSON.stringify(resultado.data["Poupança"]))
+            }
+            if (resultado.data?.["SELIC"]?.length > 0) {
+              localStorage.setItem("indices_SELIC", JSON.stringify(resultado.data["SELIC"]))
+            }
+            if (resultado.data?.["CDI"]?.length > 0) {
+              localStorage.setItem("indices_CDI", JSON.stringify(resultado.data["CDI"]))
+            }
+            // Guardar timestamp da atualização
+            localStorage.setItem("indices_atualizado_em", new Date().toISOString())
+            console.log("✓ Dados salvos no cache local")
+          } catch (e) {
+            console.warn("Aviso: não foi possível salvar dados no cache", e)
+          }
+        }
+        
         setMensagemAtualizacao(
-          `Índices atualizados com sucesso! ${resultado.indicesAtualizados} índices foram atualizados.`,
+          `✓ Sucesso! ${resultado.total || resultado.successCount || 0} índice(s) foram atualizados das fontes oficiais (Banco Central/FGV/IBGE).`,
         )
+        toast({
+          title: "Atualização Concluída",
+          description: resultado.message || `${resultado.total} índices atualizados com sucesso`,
+        })
         setTimeout(() => {
           setMensagemAtualizacao("")
-        }, 5000)
+        }, 8000)
       } else {
-        throw new Error("Erro ao atualizar índices")
+        const erro = await response.json()
+        throw new Error(erro.message || "Erro ao atualizar índices")
       }
     } catch (error) {
-      setMensagemAtualizacao("Erro ao atualizar índices. Tente novamente mais tarde.")
+      const mensagem = error instanceof Error ? error.message : "Erro desconhecido"
+      setMensagemAtualizacao(`✗ Erro: ${mensagem}. Usando dados locais como fallback.`)
+      toast({
+        variant: "destructive",
+        title: "Erro na Atualização",
+        description: mensagem,
+      })
       setTimeout(() => {
         setMensagemAtualizacao("")
-      }, 5000)
+      }, 8000)
     } finally {
       setAtualizandoIndices(false)
     }
