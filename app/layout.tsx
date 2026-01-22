@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Calculadora de Atualização Monetária - CGOF/SP',
   description: 'Sistema de cálculo de correção monetária, juros, multa e honorários',
   icons: {
-    icon: '/icon.svg',
+    icon: '/favicon.ico',
     apple: '/apple-icon.png',
   },
 }
