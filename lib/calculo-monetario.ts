@@ -1,3 +1,36 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// MÓDULO DE CÁLCULO MONETÁRIO - FÓRMULAS OFICIAIS
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// IMPLEMENTAÇÃO DAS 4 FÓRMULAS ESSENCIAIS:
+//
+// FÓRMULA 1: Correção mensal pela poupança (aplicada todo mês)
+//   Valor_mês = Valor_anterior × (1 + p_m)
+//   Onde: p_m = taxa mensal da poupança em forma decimal
+//
+// FÓRMULA 2: Reajuste anual pelo IGP-M (a cada 12 meses completos)
+//   IGP-M_acumulado = (1 + m1) × (1 + m2) × ... × (1 + m12) − 1
+//   Onde: m1...m12 = índices mensais em forma decimal
+//
+// FÓRMULA 3: Consolidada (mês com aniversário de 12 meses)
+//   Valor_mês = Valor_anterior × (1 + p_m) × (1 + igpm_12)
+//   Onde: igpm_12 = IGP-M acumulado dos 12 meses anteriores
+//
+// FÓRMULA 4: Geral após N meses
+//   Valor_final = Valor_inicial × ∏(1 + p_m) × ∏(1 + igpm_12)
+//   Onde: Primeiro produtório = todos os meses
+//         Segundo produtório = somente ciclos anuais completos
+//
+// ═════════════════════════════════════════════════════════════════════════════
+// OBSERVAÇÕES TÉCNICAS ESSENCIAIS:
+// ═════════════════════════════════════════════════════════════════════════════
+// ✓ IGP-M NÃO entra mensalmente, apenas uma vez por ciclo de 12 meses
+// ✓ Nunca somar percentuais (sempre multiplicar fatores: 1 + taxa/100)
+// ✓ IGP-M nunca deve ser distribuído mês a mês
+// ✓ Aplicar IGP-M uma única vez por ciclo, nos meses 12, 24, 36...
+// ✓ Sempre multiplicar fatores, nunca somar
+// ═══════════════════════════════════════════════════════════════════════════════
+
 import { obterIndicesAtualizados, getIndiceNome, type IndiceData } from "./indices-data"
 
 export interface DataCalculo {
@@ -96,8 +129,17 @@ function diasExatosEntre(inicio: Date, fim: Date): number {
   return Math.max(0, Math.round((fimUTC - inicioUTC) / msPorDia))
 }
 
-// Função para calcular IGP-M acumulado nos últimos 12 meses (fórmula da FGV)
+// ═══════════════════════════════════════════════════════════════════════════════
+// FÓRMULA 2: Reajuste anual pelo IGP-M (a cada 12 meses completos)
+// ═══════════════════════════════════════════════════════════════════════════════
 // IGP-M acumulado = (1 + m1) × (1 + m2) × ... × (1 + m12) − 1
+// 
+// Onde:
+//   m1...m12 = índices mensais do IGP-M em forma decimal (ex: 0.85% = 0.0085)
+//   Resultado em percentual (multiplicar por 100)
+//
+// Aplicação: Uma única vez por ciclo de 12 meses, nunca distribuído mensalmente
+// ═══════════════════════════════════════════════════════════════════════════════
 function calcularIGPMAcumulado12Meses(indices: IndiceData[]): { valor: number; detalhes: IndiceData[] } {
   if (indices.length === 0) return { valor: 0, detalhes: [] }
   
@@ -119,9 +161,17 @@ function calcularIGPMAcumulado12Meses(indices: IndiceData[]): { valor: number; d
   }
 }
 
-// Função para aplicar regra de ciclos de 12 parcelas com reajuste IGP-M acumulado
-// O valor das parcelas permanece fixo durante cada ciclo de 12 parcelas
-// e é reajustado exclusivamente pelo IGP-M acumulado dos 12 meses imediatamente anteriores
+// ═══════════════════════════════════════════════════════════════════════════════
+// FÓRMULA 1: Correção mensal pela poupança (aplicada todo mês, de forma composta)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Valor_mês = Valor_anterior × (1 + p_m)
+//
+// Onde:
+//   p_m = taxa mensal da poupança do mês (em forma decimal)
+//   Resultado = novo valor com a poupança aplicada
+//
+// IMPORTANTE: Aplicada em TODOS os meses, sem exceção
+// ═══════════════════════════════════════════════════════════════════════════════
 function aplicarCicloParcelasIGPM(
   indices: IndiceData[],
 ): IndiceData[] {
@@ -171,16 +221,19 @@ function aplicarCicloParcelasIGPM(
   return resultado
 }
 
-// Função para aplicar reajuste IGP-M a cada 12 meses exato (conforme pseudocódigo obrigatório)
-// PSEUDOCÓDIGO OBRIGATÓRIO:
-// valor = valor_original
-// contador_meses = 0
-// para cada mês no período:
-//     contador_meses += 1
-//     valor = valor * (1 + poupanca_mensal)
-//     se contador_meses % 12 == 0:
-//         igpm_acumulado = produto(1 + igpm_mes_1 ... igpm_mes_12) - 1
-//         valor = valor * (1 + igpm_acumulado)
+// ═══════════════════════════════════════════════════════════════════════════════
+// FÓRMULA 3: Fórmula consolidada do mês com aniversário de 12 meses
+// ═══════════════════════════════════════════════════════════════════════════════
+// Quando coincidem poupança + reajuste anual (a cada 12 meses):
+//
+// Valor_mês = Valor_anterior × (1 + p_m) × (1 + igpm_12)
+//
+// Onde:
+//   p_m = taxa mensal da poupança do mês (em forma decimal)
+//   igpm_12 = IGP-M acumulado dos 12 meses anteriores (em forma decimal)
+//
+// OBSERVAÇÃO CRÍTICA: Multiplicação de FATORES, não soma de percentuais
+// ═══════════════════════════════════════════════════════════════════════════════
 function aplicarReajusteIGPMACada12Meses(
   indicesEscolhidos: IndiceData[],
   indicesIGPM: IndiceData[],
@@ -189,17 +242,37 @@ function aplicarReajusteIGPMACada12Meses(
 
   if (indicesEscolhidos.length === 0) return resultado
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // PSEUDOCÓDIGO OBRIGATÓRIO (implementado abaixo linha por linha):
+  // ───────────────────────────────────────────────────────────────────────────
+  // valor = valor_original
+  // contador_meses = 0
+  // 
+  // para cada mês no período:
+  //     contador_meses += 1
+  //     valor = valor × (1 + poupanca_mensal)  ← FÓRMULA 1
+  //     
+  //     se contador_meses % 12 == 0:           ← Verificar aniversário exato
+  //         igpm_acumulado = (1+m1)×(1+m2)×...×(1+m12) − 1  ← FÓRMULA 2
+  //         valor = valor × (1 + igpm_acumulado)  ← FÓRMULA 3
+  // ───────────────────────────────────────────────────────────────────────────
+  
   // Seguir exatamente o pseudocódigo
   for (let i = 0; i < indicesEscolhidos.length; i++) {
     const indiceAtual = indicesEscolhidos[i]
-    const contador_meses = i + 1 // Começa em 1
+    const contador_meses = i + 1 // contador começa em 1 (não em 0)
 
     // Sempre aplicar Poupança mensal
     const indicePoupanca = indiceAtual
 
-    // Verificar se é mês múltiplo de 12
+    // Verificar se é mês múltiplo de 12 (exatamente nos meses 12, 24, 36...)
     if (contador_meses % 12 === 0) {
-      // Este é o 12º, 24º, 36º mês...
+      // ─────────────────────────────────────────────────────────────────
+      // FÓRMULA 3: Aplicar FÓRMULA 1 (Poupança) + FÓRMULA 2 (IGP-M acumulado)
+      // ─────────────────────────────────────────────────────────────────
+      // Valor_mês = Valor_anterior × (1 + p_m) × (1 + igpm_12)
+      // ─────────────────────────────────────────────────────────────────
+      
       // Buscar os 12 meses DE IGP-M IMEDIATAMENTE ANTERIORES
       const inicioIGPM = i - 11 // 12 meses antes (0-based)
 
@@ -224,12 +297,13 @@ function aplicarReajusteIGPMACada12Meses(
         const igpmInfo = calcularIGPMAcumulado12Meses(igpmDoCiclo)
         const igpmAcumulado = igpmInfo.valor
 
-        // Fator = (1 + Poupança) × (1 + IGP-M acumulado)
+        // FÓRMULA 3: Fator = (1 + Poupança) × (1 + IGP-M acumulado)
+        // Multiplicação de fatores (NUNCA soma de percentuais)
         const fatorPoupanca = 1 + indicePoupanca.valor / 100
         const fatorIGPM = 1 + igpmAcumulado / 100
         const fatorTotal = fatorPoupanca * fatorIGPM
 
-        // Converter para percentual
+        // Converter fator de volta para percentual
         const percentualTotal = (fatorTotal - 1) * 100
 
         resultado.push({
@@ -241,11 +315,19 @@ function aplicarReajusteIGPMACada12Meses(
           igpmReajuste: igpmAcumulado,
         })
       } else {
-        // Ciclo incompleto: aplicar apenas Poupança
+        // Ciclo incompleto: aplicar apenas Poupança (sem IGP-M)
         resultado.push(indicePoupanca)
       }
     } else {
-      // Meses 1-11, 13-23, 25-35: aplicar apenas Poupança
+      // ─────────────────────────────────────────────────────────────────
+      // FÓRMULA 1: Meses 1-11, 13-23, 25-35, etc. (não são aniversários)
+      // ─────────────────────────────────────────────────────────────────
+      // Aplicar apenas Poupança mensal
+      // Valor_mês = Valor_anterior × (1 + p_m)
+      // 
+      // IMPORTANTE: IGP-M NÃO entra mensalmente
+      // Ele entra uma única vez por ciclo de 12 meses
+      // ─────────────────────────────────────────────────────────────────
       resultado.push(indicePoupanca)
     }
   }
