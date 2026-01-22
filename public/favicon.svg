@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background com degradê -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Fundo arredondado -->
+  <rect width="64" height="64" rx="12" ry="12" fill="url(#bgGradient)"/>
+  
+  <!-- Moldura interna -->
+  <rect x="4" y="4" width="56" height="56" rx="8" ry="8" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  
+  <!-- Corpo da calculadora -->
+  <rect x="12" y="10" width="40" height="44" rx="3" ry="3" fill="#ffffff" opacity="0.95"/>
+  
+  <!-- Display/Tela -->
+  <rect x="15" y="13" width="34" height="10" rx="2" ry="2" fill="#0f3460"/>
+  <text x="45" y="22" font-size="8" fill="#22c55e" font-family="monospace" font-weight="bold" text-anchor="end">R$ 100</text>
+  
+  <!-- Botões da calculadora -->
+  <!-- Linha 1 -->
+  <rect x="15" y="26" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="18.5" y="29.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">7</text>
+  
+  <rect x="23" y="26" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="26.5" y="29.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">8</text>
+  
+  <rect x="31" y="26" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="34.5" y="29.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">9</text>
+  
+  <rect x="39" y="26" width="10" height="6" rx="1" ry="1" fill="#3b82f6"/>
+  <text x="44" y="29.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">÷</text>
+  
+  <!-- Linha 2 -->
+  <rect x="15" y="33" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="18.5" y="36.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">4</text>
+  
+  <rect x="23" y="33" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="26.5" y="36.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">5</text>
+  
+  <rect x="31" y="33" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="34.5" y="36.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">6</text>
+  
+  <rect x="39" y="33" width="10" height="6" rx="1" ry="1" fill="#3b82f6"/>
+  <text x="44" y="36.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">×</text>
+  
+  <!-- Linha 3 -->
+  <rect x="15" y="40" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="18.5" y="43.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">1</text>
+  
+  <rect x="23" y="40" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="26.5" y="43.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">2</text>
+  
+  <rect x="31" y="40" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
+  <text x="34.5" y="43.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">3</text>
+  
+  <rect x="39" y="40" width="10" height="6" rx="1" ry="1" fill="#3b82f6"/>
+  <text x="44" y="43.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">-</text>
+  
+  <!-- Linha 4 (botão = maior) -->
+  <rect x="15" y="47" width="34" height="6" rx="1" ry="1" fill="#10b981"/>
+  <text x="32" y="50.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">=</text>
+</svg>

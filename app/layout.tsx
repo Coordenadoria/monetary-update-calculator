@@ -5,8 +5,29 @@ export const metadata: Metadata = {
   title: 'Calculadora de Atualização Monetária - CGOF/SP',
   description: 'Sistema de cálculo de correção monetária, juros, multa e honorários',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
+    icon: [
+      {
+        url: '/favicon.ico',
+        sizes: 'any',
+      },
+      {
+        url: '/favicon.svg',
+        type: 'image/svg+xml',
+      },
+      {
+        url: '/icon-dark-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
+      },
+    ],
+    apple: [
+      {
+        url: '/apple-icon.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+    ],
+    shortcut: '/favicon.ico',
   },
   manifest: '/manifest.json',
 }
