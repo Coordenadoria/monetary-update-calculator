@@ -103,11 +103,19 @@ export default function CalculadoraAtualizacaoMonetaria() {
   const periodicidades = ["Mensal", "Anual", "Diário", "Trimestral", "Semestral"]
 
   // Função para converter formato brasileiro (296.556,65) para número (296556.65)
+  // ⚠️ IMPORTANTE para Taxa de Juros:
+  //   - Digite 0,05 para 0,05% (não 0,0005)
+  //   - Digite 5 para 5% (não 500)
+  //   - A função assume que o valor digitado JÁ é percentual
+  //   - Exemplos: "0,05" → 0.05 (zero vírgula zero cinco por cento)
+  //              "2,5" → 2.5 (dois vírgula cinco por cento)
+  //              "5" → 5 (cinco por cento)
   const parseBrazilianNumber = (value: string): number => {
     if (!value) return 0
     // Remove espaços e converte formato brasileiro para padrão JS
     // 296.556,65 → 296556.65
     // 296,65 → 296.65
+    // 0,05 → 0.05 (mantém como está, será tratado como percentual)
     const normalized = value.trim().replace(/\./g, "").replace(",", ".")
     return Number.parseFloat(normalized)
   }
@@ -740,11 +748,12 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
                 <div>
                   <Label htmlFor="taxaJuros" className="mb-2 block">
                     Taxa e período (%)
+                    <span className="text-xs text-gray-500 ml-2">(Ex: 0,05 = 0,05% | 5 = 5%)</span>
                   </Label>
                   <Input
                     id="taxaJuros"
                     type="text"
-                    placeholder="Ex: 0,05"
+                    placeholder="Digite o valor: 0,05 (para 0,05%) ou 5 (para 5%)"
                     value={formData.taxaJuros}
                     onChange={(e) => handleInputChange("taxaJuros", e.target.value)}
                   />
