@@ -1,66 +1,64 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Background com degradê -->
-  <defs>
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
-    </linearGradient>
-  </defs>
+  <!-- Background branco -->
+  <rect width="64" height="64" fill="#ffffff"/>
   
-  <!-- Fundo arredondado -->
-  <rect width="64" height="64" rx="12" ry="12" fill="url(#bgGradient)"/>
+  <!-- Escudo/Brasão -->
+  <!-- Formato do escudo -->
+  <path d="M 32 6 L 16 14 L 16 30 Q 16 46 32 54 Q 48 46 48 30 L 48 14 Z" fill="#e63946" stroke="#1a1a1a" stroke-width="1"/>
   
-  <!-- Moldura interna -->
-  <rect x="4" y="4" width="56" height="56" rx="8" ry="8" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <!-- Destaque do escudo -->
+  <path d="M 32 8 L 18 15 L 18 30 Q 18 44 32 51 Q 46 44 46 30 L 46 15 Z" fill="#f77f88" opacity="0.3"/>
   
-  <!-- Corpo da calculadora -->
-  <rect x="12" y="10" width="40" height="44" rx="3" ry="3" fill="#ffffff" opacity="0.95"/>
+  <!-- Estrela no topo -->
+  <g transform="translate(32, 12)">
+    <polygon points="0,-5 1.5,-1.5 5,-0.5 1.5,1.8 2.5,5 0,2.3 -2.5,5 -1.5,1.8 -5,-0.5 -1.5,-1.5" 
+             fill="#999999" stroke="#333333" stroke-width="0.3"/>
+  </g>
   
-  <!-- Display/Tela -->
-  <rect x="15" y="13" width="34" height="10" rx="2" ry="2" fill="#0f3460"/>
-  <text x="45" y="22" font-size="8" fill="#22c55e" font-family="monospace" font-weight="bold" text-anchor="end">R$ 100</text>
+  <!-- Espada vertical no centro -->
+  <g transform="translate(32, 28)">
+    <!-- Lâmina -->
+    <polygon points="0,-10 0.8,-6 0,8 -0.8,-6" fill="#c0c0c0" stroke="#666" stroke-width="0.4"/>
+    <line x1="0" y1="-10" x2="0" y2="8" stroke="#999" stroke-width="0.2"/>
+    
+    <!-- Guarda da espada -->
+    <rect x="-4" y="7" width="8" height="1.2" fill="#8b7355" stroke="#333" stroke-width="0.3"/>
+    
+    <!-- Cabo/Empunhadura -->
+    <rect x="-1" y="8.2" width="2" height="3.5" fill="#8b7355" stroke="#333" stroke-width="0.3"/>
+    
+    <!-- Pomo -->
+    <circle cx="0" cy="12.5" r="1" fill="#d4af37" stroke="#b8860b" stroke-width="0.2"/>
+  </g>
   
-  <!-- Botões da calculadora -->
-  <!-- Linha 1 -->
-  <rect x="15" y="26" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="18.5" y="29.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">7</text>
+  <!-- Ramo de louro esquerdo -->
+  <g transform="translate(12, 28)">
+    <path d="M 0 0 Q -1.5 -2 -2 -4" stroke="#2d6a4f" stroke-width="0.6" fill="none" stroke-linecap="round"/>
+    <!-- Folhas -->
+    <ellipse cx="-0.8" cy="-1.5" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(-35 -0.8 -1.5)"/>
+    <ellipse cx="-1.5" cy="-3" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(-30 -1.5 -3)"/>
+    <!-- Bagas -->
+    <circle cx="-0.5" cy="-2" r="0.35" fill="#ffd60a"/>
+    <circle cx="-1.8" cy="-3.5" r="0.35" fill="#ffd60a"/>
+  </g>
   
-  <rect x="23" y="26" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="26.5" y="29.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">8</text>
+  <!-- Ramo de louro direito -->
+  <g transform="translate(52, 28)">
+    <path d="M 0 0 Q 1.5 -2 2 -4" stroke="#2d6a4f" stroke-width="0.6" fill="none" stroke-linecap="round"/>
+    <!-- Folhas -->
+    <ellipse cx="0.8" cy="-1.5" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(35 0.8 -1.5)"/>
+    <ellipse cx="1.5" cy="-3" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(30 1.5 -3)"/>
+    <!-- Bagas -->
+    <circle cx="0.5" cy="-2" r="0.35" fill="#ffd60a"/>
+    <circle cx="1.8" cy="-3.5" r="0.35" fill="#ffd60a"/>
+  </g>
   
-  <rect x="31" y="26" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="34.5" y="29.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">9</text>
+  <!-- Fita/Banner inferior -->
+  <path d="M 18 50 L 18 52 Q 18 53 19 53 L 45 53 Q 46 53 46 52 L 46 50" fill="#d32f2f" stroke="#1a1a1a" stroke-width="0.5"/>
   
-  <rect x="39" y="26" width="10" height="6" rx="1" ry="1" fill="#3b82f6"/>
-  <text x="44" y="29.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">÷</text>
+  <!-- Texto no banner -->
+  <text x="32" y="52.5" font-size="5" font-weight="bold" text-anchor="middle" fill="white" font-family="serif">SP</text>
   
-  <!-- Linha 2 -->
-  <rect x="15" y="33" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="18.5" y="36.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">4</text>
-  
-  <rect x="23" y="33" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="26.5" y="36.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">5</text>
-  
-  <rect x="31" y="33" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="34.5" y="36.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">6</text>
-  
-  <rect x="39" y="33" width="10" height="6" rx="1" ry="1" fill="#3b82f6"/>
-  <text x="44" y="36.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">×</text>
-  
-  <!-- Linha 3 -->
-  <rect x="15" y="40" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="18.5" y="43.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">1</text>
-  
-  <rect x="23" y="40" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="26.5" y="43.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">2</text>
-  
-  <rect x="31" y="40" width="7" height="6" rx="1" ry="1" fill="#e5e7eb"/>
-  <text x="34.5" y="43.5" font-size="4" fill="#1f2937" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">3</text>
-  
-  <rect x="39" y="40" width="10" height="6" rx="1" ry="1" fill="#3b82f6"/>
-  <text x="44" y="43.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">-</text>
-  
-  <!-- Linha 4 (botão = maior) -->
-  <rect x="15" y="47" width="34" height="6" rx="1" ry="1" fill="#10b981"/>
-  <text x="32" y="50.5" font-size="4" fill="white" font-family="Arial" font-weight="bold" text-anchor="middle" dominant-baseline="middle">=</text>
+  <!-- Detalhe de cruz/borda -->
+  <line x1="32" y1="6" x2="32" y2="54" stroke="#666" stroke-width="0.3" opacity="0.5"/>
 </svg>

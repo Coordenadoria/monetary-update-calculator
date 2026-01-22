@@ -1,26 +1,64 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <style>
-    @media (prefers-color-scheme: light) {
-      .background { fill: black; }
-      .foreground { fill: white; }
-    }
-    @media (prefers-color-scheme: dark) {
-      .background { fill: white; }
-      .foreground { fill: black; }
-    }
-  </style>
-  <g clip-path="url(#clip0_7960_43945)">
-    <rect class="background" width="180" height="180" rx="37" />
-    <g style="transform: scale(95%); transform-origin: center">
-      <path class="foreground"
-        d="M101.141 53H136.632C151.023 53 162.689 64.6662 162.689 79.0573V112.904H148.112V79.0573C148.112 78.7105 148.098 78.3662 148.072 78.0251L112.581 112.898C112.701 112.902 112.821 112.904 112.941 112.904H148.112V126.672H112.941C98.5504 126.672 86.5638 114.891 86.5638 100.5V66.7434H101.141V100.5C101.141 101.15 101.191 101.792 101.289 102.422L137.56 66.7816C137.255 66.7563 136.945 66.7434 136.632 66.7434H101.141V53Z" />
-      <path class="foreground"
-        d="M65.2926 124.136L14 66.7372H34.6355L64.7495 100.436V66.7372H80.1365V118.47C80.1365 126.278 70.4953 129.958 65.2926 124.136Z" />
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background branco -->
+  <rect width="64" height="64" fill="#ffffff"/>
+  
+  <!-- Escudo/Brasão -->
+  <!-- Formato do escudo -->
+  <path d="M 32 6 L 16 14 L 16 30 Q 16 46 32 54 Q 48 46 48 30 L 48 14 Z" fill="#e63946" stroke="#1a1a1a" stroke-width="1"/>
+  
+  <!-- Destaque do escudo -->
+  <path d="M 32 8 L 18 15 L 18 30 Q 18 44 32 51 Q 46 44 46 30 L 46 15 Z" fill="#f77f88" opacity="0.3"/>
+  
+  <!-- Estrela no topo -->
+  <g transform="translate(32, 12)">
+    <polygon points="0,-5 1.5,-1.5 5,-0.5 1.5,1.8 2.5,5 0,2.3 -2.5,5 -1.5,1.8 -5,-0.5 -1.5,-1.5" 
+             fill="#999999" stroke="#333333" stroke-width="0.3"/>
   </g>
-  <defs>
-    <clipPath id="clip0_7960_43945">
-      <rect width="180" height="180" fill="white" />
-    </clipPath>
-  </defs>
+  
+  <!-- Espada vertical no centro -->
+  <g transform="translate(32, 28)">
+    <!-- Lâmina -->
+    <polygon points="0,-10 0.8,-6 0,8 -0.8,-6" fill="#c0c0c0" stroke="#666" stroke-width="0.4"/>
+    <line x1="0" y1="-10" x2="0" y2="8" stroke="#999" stroke-width="0.2"/>
+    
+    <!-- Guarda da espada -->
+    <rect x="-4" y="7" width="8" height="1.2" fill="#8b7355" stroke="#333" stroke-width="0.3"/>
+    
+    <!-- Cabo/Empunhadura -->
+    <rect x="-1" y="8.2" width="2" height="3.5" fill="#8b7355" stroke="#333" stroke-width="0.3"/>
+    
+    <!-- Pomo -->
+    <circle cx="0" cy="12.5" r="1" fill="#d4af37" stroke="#b8860b" stroke-width="0.2"/>
+  </g>
+  
+  <!-- Ramo de louro esquerdo -->
+  <g transform="translate(12, 28)">
+    <path d="M 0 0 Q -1.5 -2 -2 -4" stroke="#2d6a4f" stroke-width="0.6" fill="none" stroke-linecap="round"/>
+    <!-- Folhas -->
+    <ellipse cx="-0.8" cy="-1.5" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(-35 -0.8 -1.5)"/>
+    <ellipse cx="-1.5" cy="-3" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(-30 -1.5 -3)"/>
+    <!-- Bagas -->
+    <circle cx="-0.5" cy="-2" r="0.35" fill="#ffd60a"/>
+    <circle cx="-1.8" cy="-3.5" r="0.35" fill="#ffd60a"/>
+  </g>
+  
+  <!-- Ramo de louro direito -->
+  <g transform="translate(52, 28)">
+    <path d="M 0 0 Q 1.5 -2 2 -4" stroke="#2d6a4f" stroke-width="0.6" fill="none" stroke-linecap="round"/>
+    <!-- Folhas -->
+    <ellipse cx="0.8" cy="-1.5" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(35 0.8 -1.5)"/>
+    <ellipse cx="1.5" cy="-3" rx="0.5" ry="0.7" fill="#2d6a4f" transform="rotate(30 1.5 -3)"/>
+    <!-- Bagas -->
+    <circle cx="0.5" cy="-2" r="0.35" fill="#ffd60a"/>
+    <circle cx="1.8" cy="-3.5" r="0.35" fill="#ffd60a"/>
+  </g>
+  
+  <!-- Fita/Banner inferior -->
+  <path d="M 18 50 L 18 52 Q 18 53 19 53 L 45 53 Q 46 53 46 52 L 46 50" fill="#d32f2f" stroke="#1a1a1a" stroke-width="0.5"/>
+  
+  <!-- Texto no banner -->
+  <text x="32" y="52.5" font-size="5" font-weight="bold" text-anchor="middle" fill="white" font-family="serif">SP</text>
+  
+  <!-- Detalhe de cruz/borda -->
+  <line x1="32" y1="6" x2="32" y2="54" stroke="#666" stroke-width="0.3" opacity="0.5"/>
 </svg>
