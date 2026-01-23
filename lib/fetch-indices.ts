@@ -191,34 +191,68 @@ async function fetchINPCFromIBGE(): Promise<IndiceData[]> {
 async function fetchPoupancaFromBC(): Promise<IndiceData[]> {
   try {
     // Banco Central SGS API for Poupança (series 195 - taxa média de remuneração)
-    const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.195/dados?formato=json", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    // Series 195 requer data inicial e final (máximo 10 anos por janela)
+    // IMPORTANTE: A API retorna uma linha para CADA DIA
+    // Devemos usar o PRIMEIRO valor útil de cada mês (começo do período)
+    
+    const todosDados: IndiceData[] = []
+    const janelas = [
+      { inicio: "01/01/1994", fim: "31/12/2003" },
+      { inicio: "01/01/2004", fim: "31/12/2013" },
+      { inicio: "01/01/2014", fim: "31/12/2023" },
+      { inicio: "01/01/2024", fim: "31/12/2026" },
+    ]
+
+    for (const janela of janelas) {
+      try {
+        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.195/dados?formato=json&dataInicial=${janela.inicio}&dataFinal=${janela.fim}`
+        const response = await fetch(url, { cache: "no-store" })
+
+        if (!response.ok) {
+          console.warn(`BACEN Poupança janela ${janela.inicio}-${janela.fim} retornou ${response.status}`)
+          continue
+        }
+
+        const data = await response.json() as Array<{ data: string; valor: string }>
+        
+        // Agrupar por mês/ano e usar o PRIMEIRO valor (primeiro dia útil do mês)
+        const porMes = new Map<string, { data: string; valor: string }>()
+        for (const item of data) {
+          const [day, month, year] = item.data.split("/")
+          const key = `${month}-${year}`
+          // Usa o primeiro valor de cada mês (se não estiver setado ainda)
+          if (!porMes.has(key)) {
+            porMes.set(key, item)
+          }
+        }
+
+        // Converter para IndiceData
+        for (const [key, item] of porMes.entries()) {
+          const [day, month, year] = item.data.split("/")
+          const valor = parseFloat(item.valor.replace(",", "."))
+
+          if (day && month && year && !isNaN(valor)) {
+            todosDados.push({
+              mes: parseInt(month),
+              ano: parseInt(year),
+              valor,
+            })
+          }
+        }
+      } catch (janelError) {
+        console.warn(`Erro na janela Poupança ${janela.inicio}-${janela.fim}:`, janelError)
+        continue
       }
+    }
+
+    // Ordenar cronologicamente
+    const indicesOrdenados = todosDados.sort((a, b) => {
+      if (a.ano !== b.ano) return a.ano - b.ano
+      return a.mes - b.mes
     })
 
-    if (!response.ok) {
-      throw new Error(`Banco Central API returned ${response.status}`)
-    }
-
-    const data = await response.json() as Array<{ data: string; valor: string }>
-    const indices: IndiceData[] = []
-
-    for (const item of data) {
-      const [day, month, year] = item.data.split("/")
-      const valor = parseFloat(item.valor.replace(",", "."))
-
-      if (day && month && year && !isNaN(valor)) {
-        indices.push({
-          mes: parseInt(month),
-          ano: parseInt(year),
-          valor,
-        })
-      }
-    }
-
-    console.log(`[FETCH] Poupança: ${indices.length} registros fetched from Banco Central`)
-    return indices
+    console.log(`[FETCH] Poupança: ${indicesOrdenados.length} registros fetched from Banco Central (usando primeiro dia útil de cada mês)`)
+    return indicesOrdenados
   } catch (error) {
     console.error("Error fetching Poupança from Banco Central:", error)
     return []
@@ -229,41 +263,60 @@ async function fetchPoupancaFromBC(): Promise<IndiceData[]> {
 async function fetchSELICFromBC(): Promise<IndiceData[]> {
   try {
     // Banco Central SGS API for SELIC (series 11 - taxa média diária)
-    const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=json", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    // Requires date windows (max 10 years per request)
+    const todosDados: IndiceData[] = []
+    const janelas = [
+      { inicio: "01/01/2000", fim: "31/12/2009" },
+      { inicio: "01/01/2010", fim: "31/12/2019" },
+      { inicio: "01/01/2020", fim: "31/12/2026" },
+    ]
+
+    for (const janela of janelas) {
+      try {
+        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=json&dataInicial=${janela.inicio}&dataFinal=${janela.fim}`
+        const response = await fetch(url, { cache: "no-store" })
+
+        if (!response.ok) {
+          console.warn(`BACEN SELIC janela ${janela.inicio}-${janela.fim} retornou ${response.status}`)
+          continue
+        }
+
+        const data = await response.json() as Array<{ data: string; valor: string }>
+        
+        for (const item of data) {
+          const [day, month, year] = item.data.split("/")
+          const valor = parseFloat(item.valor.replace(",", "."))
+
+          if (day && month && year && !isNaN(valor)) {
+            // Group by month, taking average of daily values
+            const mes = parseInt(month)
+            const ano = parseInt(year)
+            const existing = todosDados.find((i) => i.mes === mes && i.ano === ano)
+            if (existing) {
+              existing.valor = (existing.valor + valor) / 2
+            } else {
+              todosDados.push({
+                mes,
+                ano,
+                valor,
+              })
+            }
+          }
+        }
+      } catch (janelError) {
+        console.warn(`Erro na janela SELIC ${janela.inicio}-${janela.fim}:`, janelError)
+        continue
       }
+    }
+
+    // Ordenar cronologicamente
+    const indicesOrdenados = todosDados.sort((a, b) => {
+      if (a.ano !== b.ano) return a.ano - b.ano
+      return a.mes - b.mes
     })
 
-    if (!response.ok) {
-      throw new Error(`Banco Central API returned ${response.status}`)
-    }
-
-    const data = await response.json() as Array<{ data: string; valor: string }>
-    const indices: IndiceData[] = []
-
-    for (const item of data) {
-      const [day, month, year] = item.data.split("/")
-      const valor = parseFloat(item.valor.replace(",", "."))
-
-      if (day && month && year && !isNaN(valor)) {
-        // Group SELIC by month (calculate monthly average)
-        const existing = indices.find((i) => i.mes === parseInt(month) && i.ano === parseInt(year))
-        if (existing) {
-          // Average multiple daily values in the same month
-          existing.valor = (existing.valor + valor) / 2
-        } else {
-          indices.push({
-            mes: parseInt(month),
-            ano: parseInt(year),
-            valor,
-          })
-        }
-      }
-    }
-
-    console.log(`[FETCH] SELIC: ${indices.length} registros fetched from Banco Central`)
-    return indices
+    console.log(`[FETCH] SELIC: ${indicesOrdenados.length} registros fetched from Banco Central`)
+    return indicesOrdenados
   } catch (error) {
     console.error("Error fetching SELIC from Banco Central:", error)
     return []
@@ -274,41 +327,60 @@ async function fetchSELICFromBC(): Promise<IndiceData[]> {
 async function fetchCDIFromBC(): Promise<IndiceData[]> {
   try {
     // Banco Central SGS API for CDI (series 12 - taxa média diária)
-    const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    // Requires date windows (max 10 years per request)
+    const todosDados: IndiceData[] = []
+    const janelas = [
+      { inicio: "01/01/2000", fim: "31/12/2009" },
+      { inicio: "01/01/2010", fim: "31/12/2019" },
+      { inicio: "01/01/2020", fim: "31/12/2026" },
+    ]
+
+    for (const janela of janelas) {
+      try {
+        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=${janela.inicio}&dataFinal=${janela.fim}`
+        const response = await fetch(url, { cache: "no-store" })
+
+        if (!response.ok) {
+          console.warn(`BACEN CDI janela ${janela.inicio}-${janela.fim} retornou ${response.status}`)
+          continue
+        }
+
+        const data = await response.json() as Array<{ data: string; valor: string }>
+        
+        for (const item of data) {
+          const [day, month, year] = item.data.split("/")
+          const valor = parseFloat(item.valor.replace(",", "."))
+
+          if (day && month && year && !isNaN(valor)) {
+            // Group by month, taking average of daily values
+            const mes = parseInt(month)
+            const ano = parseInt(year)
+            const existing = todosDados.find((i) => i.mes === mes && i.ano === ano)
+            if (existing) {
+              existing.valor = (existing.valor + valor) / 2
+            } else {
+              todosDados.push({
+                mes,
+                ano,
+                valor,
+              })
+            }
+          }
+        }
+      } catch (janelError) {
+        console.warn(`Erro na janela CDI ${janela.inicio}-${janela.fim}:`, janelError)
+        continue
       }
+    }
+
+    // Ordenar cronologicamente
+    const indicesOrdenados = todosDados.sort((a, b) => {
+      if (a.ano !== b.ano) return a.ano - b.ano
+      return a.mes - b.mes
     })
 
-    if (!response.ok) {
-      throw new Error(`Banco Central API returned ${response.status}`)
-    }
-
-    const data = await response.json() as Array<{ data: string; valor: string }>
-    const indices: IndiceData[] = []
-
-    for (const item of data) {
-      const [day, month, year] = item.data.split("/")
-      const valor = parseFloat(item.valor.replace(",", "."))
-
-      if (day && month && year && !isNaN(valor)) {
-        // Group CDI by month (calculate monthly average)
-        const existing = indices.find((i) => i.mes === parseInt(month) && i.ano === parseInt(year))
-        if (existing) {
-          // Average multiple daily values in the same month
-          existing.valor = (existing.valor + valor) / 2
-        } else {
-          indices.push({
-            mes: parseInt(month),
-            ano: parseInt(year),
-            valor,
-          })
-        }
-      }
-    }
-
-    console.log(`[FETCH] CDI: ${indices.length} registros fetched from Banco Central`)
-    return indices
+    console.log(`[FETCH] CDI: ${indicesOrdenados.length} registros fetched from Banco Central`)
+    return indicesOrdenados
   } catch (error) {
     console.error("Error fetching CDI from Banco Central:", error)
     return []
