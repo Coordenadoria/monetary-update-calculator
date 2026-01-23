@@ -1012,15 +1012,22 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
   if (parametros.numeroParcelas && parametros.numeroParcelas > 0) {
     const numeroParcelas = Math.floor(parametros.numeroParcelas)
     
+    // Obter índices Poupança do período para aplicar ao parcelamento
+    const indicesPoupancaParcelamento = await obterIndicesPeriodo(
+      parametros.dataInicial,
+      parametros.dataFinal,
+      "Poupança"
+    )
+    
     // Calcular valor total com IGP-M a cada 12 meses de parcelamento
-    let valorParcelamentoComIGPM = valorOriginal
+    let valorParcelamentoComIGPM = parametros.valorOriginal
     let mesesParcelamento = 0
     let contadorIGPM = 0
     
     // Simular o crescimento do parcelamento aplicando Poupança + IGP-M a cada 12 meses
     for (let parcela = 1; parcela <= numeroParcelas; parcela++) {
       mesesParcelamento++
-      const indiceAtualPoupanca = indicesDBPeriodo[mesesParcelamento - 1]
+      const indiceAtualPoupanca = indicesPoupancaParcelamento[mesesParcelamento - 1]
       
       if (indiceAtualPoupanca) {
         const fatorPoupanca = 1 + indiceAtualPoupanca.valor / 100
@@ -1033,9 +1040,9 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
           const igpmDoCiclo: IndiceData[] = []
           
           for (let j = 0; j < 12; j++) {
-            const indiceIGPMPeriodo = indicesDBPeriodo[inicioIGPMCiclo + j - 1]
+            const indiceIGPMPeriodo = indicesPoupancaParcelamento[inicioIGPMCiclo + j - 1]
             if (indiceIGPMPeriodo) {
-              const igpmCorrespondenteEncontrado = indicesIGPM.find(
+              const igpmCorrespondenteEncontrado = indicesIGPMPeriodo.find(
                 (idx) => idx.mes === indiceIGPMPeriodo.mes && idx.ano === indiceIGPMPeriodo.ano
               )
               if (igpmCorrespondenteEncontrado) {
@@ -1067,7 +1074,7 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     memoriaCalculo.push(``)
     memoriaCalculo.push(`=== PARCELAMENTO ===`)
     memoriaCalculo.push(``)
-    memoriaCalculo.push(`Valor original a parcelar: R$ ${valorOriginal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+    memoriaCalculo.push(`Valor original a parcelar: R$ ${parametros.valorOriginal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
     memoriaCalculo.push(`Número de parcelas: ${numeroParcelas}`)
     memoriaCalculo.push(``)
     memoriaCalculo.push(`APLICAÇÃO: Poupança mensal + IGP-M a cada 12 meses de parcelamento`)
