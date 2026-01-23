@@ -57,26 +57,147 @@ async function fetchIGPMFromIpeadata(): Promise<IndiceData[]> {
   }
 }
 
+/**
+ * Buscar Poupança do BCB (série 25 - rentabilidade mensal acumulada)
+ * Série: 25 (Poupança - % mensal acumulado por aniversário)
+ */
+async function fetchPoupancaFromBCB(): Promise<IndiceData[]> {
+  try {
+    const url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.25/dados?formato=json&dataInicial=01/01/1989&dataFinal=31/12/2025"
+    const response = await fetch(url, { cache: "no-store", timeout: 10000 })
 
+    if (!response.ok) {
+      console.warn(`BCB API (Poupança) returned ${response.status}`)
+      return []
+    }
+
+    const data = await response.json()
+    const indices: IndiceData[] = []
+
+    if (Array.isArray(data)) {
+      const processedDates = new Set<string>()
+
+      for (const item of data) {
+        // Usar apenas o primeiro dia de cada mês
+        if (item.data && item.valor) {
+          const dateParts = item.data.split("/")
+          const day = parseInt(dateParts[0])
+          const month = parseInt(dateParts[1])
+          const year = parseInt(dateParts[2])
+          const dateKey = `${month}-${year}`
+
+          // Pega apenas primeiro dia do mês
+          if (day === 1 && !processedDates.has(dateKey)) {
+            const valor = parseFloat(item.valor.replace(",", "."))
+
+            if (year >= 1989 && month >= 1 && month <= 12 && !isNaN(valor)) {
+              indices.push({
+                mes: month,
+                ano: year,
+                valor,
+              })
+              processedDates.add(dateKey)
+            }
+          }
+        }
+      }
+    }
+
+    const resultado = indices.sort((a, b) => {
+      if (a.ano !== b.ano) return a.ano - b.ano
+      return a.mes - b.mes
+    })
+
+    console.log(`[FETCH] Poupança BCB: ${resultado.length} registros fetched (${resultado.length > 0 ? `${resultado[0].ano}-${resultado[resultado.length - 1].ano}` : "vazio"})`)
+    return resultado
+  } catch (error) {
+    console.error("Error fetching Poupança from BCB:", error)
+    return []
+  }
+}
+
+/**
+ * Buscar IGP-M do BCB (série 189)
+ * Série: 189 (IGP-M - % mensal)
+ */
+async function fetchIGPMFromBCB(): Promise<IndiceData[]> {
+  try {
+    const url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json"
+    const response = await fetch(url, { cache: "no-store", timeout: 10000 })
+
+    if (!response.ok) {
+      console.warn(`BCB API (IGP-M) returned ${response.status}`)
+      // Tentar Ipeadata como fallback
+      return await fetchIGPMFromIpeadata()
+    }
+
+    const data = await response.json()
+    const indices: IndiceData[] = []
+
+    if (Array.isArray(data)) {
+      for (const item of data) {
+        if (item.data && item.valor) {
+          const dateParts = item.data.split("/")
+          const day = parseInt(dateParts[0])
+          const month = parseInt(dateParts[1])
+          const year = parseInt(dateParts[2])
+
+          // Usar primeiro dia do mês
+          if (day === 1) {
+            const valor = parseFloat(item.valor.replace(",", "."))
+
+            if (year >= 1989 && month >= 1 && month <= 12 && !isNaN(valor)) {
+              indices.push({
+                mes: month,
+                ano: year,
+                valor,
+              })
+            }
+          }
+        }
+      }
+    }
+
+    const resultado = indices.sort((a, b) => {
+      if (a.ano !== b.ano) return a.ano - b.ano
+      return a.mes - b.mes
+    })
+
+    console.log(`[FETCH] IGP-M BCB: ${resultado.length} registros fetched (${resultado.length > 0 ? `${resultado[0].ano}-${resultado[resultado.length - 1].ano}` : "vazio"})`)
+    return resultado
+  } catch (error) {
+    console.error("Error fetching IGP-M from BCB:", error)
+    // Fallback para Ipeadata
+    return await fetchIGPMFromIpeadata()
+  }
+}
 
 export async function fetchAllIndices(): Promise<{
   "IGP-M": IndiceData[]
+  "Poupança": IndiceData[]
   timestamp: string
   successCount: number
 }> {
   const results = {
     "IGP-M": [] as IndiceData[],
+    "Poupança": [] as IndiceData[],
     timestamp: new Date().toISOString(),
     successCount: 0,
   }
 
-  // Fetch IGP-M
-  const igpm = await Promise.allSettled([
-    fetchIGPMFromIpeadata(),
+  // Fetch IGP-M e Poupança em paralelo
+  const [igpmResult, poupancaResult] = await Promise.allSettled([
+    fetchIGPMFromBCB(),
+    fetchPoupancaFromBCB(),
   ])
 
-  if (igpm[0].status === "fulfilled" && igpm[0].value.length > 0) {
-    results["IGP-M"] = igpm[0].value
+  if (igpmResult.status === "fulfilled" && igpmResult.value.length > 0) {
+    results["IGP-M"] = igpmResult.value
+    results.successCount++
+  }
+
+  if (poupancaResult.status === "fulfilled" && poupancaResult.value.length > 0) {
+    results["Poupança"] = poupancaResult.value
     results.successCount++
   }
 
@@ -100,6 +221,11 @@ export async function atualizarIndicesNoCache(): Promise<boolean> {
     if (indicesObtidos["IGP-M"].length > 0) {
       localStorage.setItem("indices_IGP-M", JSON.stringify(indicesObtidos["IGP-M"]))
       console.log(`[CACHE] ✓ IGP-M: ${indicesObtidos["IGP-M"].length} registros salvos`)
+    }
+
+    if (indicesObtidos["Poupança"].length > 0) {
+      localStorage.setItem("indices_Poupança", JSON.stringify(indicesObtidos["Poupança"]))
+      console.log(`[CACHE] ✓ Poupança: ${indicesObtidos["Poupança"].length} registros salvos`)
     }
 
     // Salvar timestamp da última atualização

@@ -534,22 +534,38 @@ export async function obterIndicesPeriodo(
   const indicesPeriodo: IndiceData[] = []
   const nomeCurtoIndice = getIndiceNome(nomeIndice)
 
-  // Apenas suportar IGP-M (Poupança foi removida devido a CORS bloqueado)
-  // IMPORTANTE: Para período de 12 meses, sempre começar do mês inicial (sem incremento)
-  // pois o período já foi calculado para incluir exatamente 12 meses
-  let mesAtual = dataInicial.mes
-  let anoAtual = dataInicial.ano
+  if (nomeCurtoIndice === "Poupança") {
+    let dataAtual = new Date(dataInicial.ano, dataInicial.mes - 1, dataInicial.dia)
+    const dataFim = new Date(dataFinal.ano, dataFinal.mes - 1, dataFinal.dia)
 
-  while (
-    anoAtual < dataFinal.ano ||
-    (anoAtual === dataFinal.ano && mesAtual <= dataFinal.mes)
-  ) {
-    const indiceDoMes = indices.find((i) => i.mes === mesAtual && i.ano === anoAtual)
-    if (indiceDoMes) indicesPeriodo.push(indiceDoMes)
-    mesAtual++
+    while (dataAtual < dataFim) {
+      const proximoAniversario = new Date(dataAtual)
+      proximoAniversario.setMonth(proximoAniversario.getMonth() + 1)
+
+      if (proximoAniversario <= dataFim) {
+        const mesIndice = proximoAniversario.getMonth() + 1
+        const anoIndice = proximoAniversario.getFullYear()
+        const indiceDoMes = indices.find((i) => i.mes === mesIndice && i.ano === anoIndice)
+        if (indiceDoMes) indicesPeriodo.push(indiceDoMes)
+      }
+      dataAtual = proximoAniversario
+    }
+  } else {
+    let mesAtual = dataInicial.dia === 1 ? dataInicial.mes : dataInicial.mes + 1
+    let anoAtual = dataInicial.ano
     if (mesAtual > 12) {
       mesAtual = 1
       anoAtual++
+    }
+
+    while (anoAtual < dataFinal.ano || (anoAtual === dataFinal.ano && mesAtual <= dataFinal.mes)) {
+      const indiceDoMes = indices.find((i) => i.mes === mesAtual && i.ano === anoAtual)
+      if (indiceDoMes) indicesPeriodo.push(indiceDoMes)
+      mesAtual++
+      if (mesAtual > 12) {
+        mesAtual = 1
+        anoAtual++
+      }
     }
   }
 
@@ -719,108 +735,27 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     memoriaCalculo.push(`Nenhum índice encontrado para o período informado.`)
     fatorCorrecao = 1
   } else {
-    memoriaCalculo.push(`Índices aplicados no período:`)
+    memoriaCalculo.push(`=== DETALHAMENTO DOS ÍNDICES APLICADOS ===`)
     memoriaCalculo.push(``)
+    memoriaCalculo.push(`| # | Período | Taxa (%) | Fator Mensal | Acumulado |`)
+    memoriaCalculo.push(`|---|---------|----------|--------------|-----------|`)
 
-    // Aplicar índices IGP-M
-    let contadorParcelas = 0
-    let cicloAtual = 1
-    
-    if (nomeIndice === "IGP-M" && indicesDBPeriodo.length > 12) {
-      memoriaCalculo.push(`=== DETALHAMENTO COM REAJUSTE A CADA 12 MESES (FÓRMULA IGP-M ACUMULADO) ===`)
-      memoriaCalculo.push(``)
-      memoriaCalculo.push(`Fórmula aplicada: IGP-M acumulado = (1 + m1) × (1 + m2) × ... × (1 + m12) − 1`)
-      memoriaCalculo.push(``)
-      memoriaCalculo.push(`CICLO 1 (Meses 1-12): Aplicar índices normais do período`)
-      memoriaCalculo.push(``)
-    }
-    
+    // Aplicar índices em formato de tabela
     indicesDBPeriodo.forEach((indice, index) => {
-      contadorParcelas = index + 1
-      const posicaoNoCiclo = ((contadorParcelas - 1) % 12) + 1
-      const cicloAtualMes = Math.floor((contadorParcelas - 1) / 12) + 1
-      
-      // Mostrar indicador de novo ciclo
-      if (posicaoNoCiclo === 1 && contadorParcelas > 1 && nomeIndice === "IGP-M" && indicesDBPeriodo.length > 12) {
-        // Mostrar fim do ciclo anterior
-        const cicloAnterior = indicesDBPeriodo.slice(Math.max(0, index - 12), index)
-        if (cicloAnterior.length === 12) {
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`--- CICLO ${cicloAtualMes - 1} FINALIZADO ---`)
-          memoriaCalculo.push(``)
-          
-          // Calcular e mostrar o reajuste que será aplicado no próximo ciclo
-          let fatorReajuste = 1
-          const mesesAnterior: string[] = []
-          
-          cicloAnterior.forEach((m, idx) => {
-            const fator = 1 + m.valor / 100
-            fatorReajuste *= fator
-            const mesNomePrev = [
-              "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-            ][m.mes - 1]
-            mesesAnterior.push(`${mesNomePrev}/${m.ano}`)
-          })
-          
-          const reajustePercent = (fatorReajuste - 1) * 100
-          
-          memoriaCalculo.push(`CICLO ${cicloAtualMes} (Meses ${contadorParcelas}-${contadorParcelas + 11}): Aplicar reajuste IGP-M acumulado`)
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`Reajuste IGP-M acumulado dos 12 meses anteriores (${mesesAnterior[0]} a ${mesesAnterior[11]}):`)
-          memoriaCalculo.push(`Fórmula: (1 + m1) × (1 + m2) × ... × (1 + m12) − 1`)
-          memoriaCalculo.push(``)
-          
-          cicloAnterior.forEach((m, idx) => {
-            const fator = 1 + m.valor / 100
-            const mesNomePrev = [
-              "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-            ][m.mes - 1]
-            memoriaCalculo.push(`  m${idx + 1} (${mesNomePrev}/${m.ano}): 1 + ${m.valor.toFixed(6)}% = ${fator.toFixed(8)}`)
-          })
-          
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`Cálculo: ${fatorReajuste.toFixed(10)} - 1 = ${reajustePercent.toFixed(8)}%`)
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`Este reajuste será aplicado no 1º mês do novo ciclo e os demais meses terão valor FIXO.`)
-          memoriaCalculo.push(``)
-        }
-      }
+      const contadorParcelas = index + 1
+      const mesNome = [
+        "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
+        "Jul", "Ago", "Set", "Out", "Nov", "Dez"
+      ][indice.mes - 1]
       
       const fatorMensal = 1 + indice.valor / 100
       fatorCorrecao *= fatorMensal
-      const valorAcumulado = parametros.valorOriginal * fatorCorrecao
-      const mesNome = [
-        "Janeiro",
-        "Fevereiro",
-        "Março",
-        "Abril",
-        "Maio",
-        "Junho",
-        "Julho",
-        "Agosto",
-        "Setembro",
-        "Outubro",
-        "Novembro",
-        "Dezembro",
-      ][indice.mes - 1]
-      
-      // Mostrar indicação de reajuste para IGP-M
-      let indicadorCiclo = ""
-      if (nomeIndice === "IGP-M" && indicesDBPeriodo.length > 12) {
-        if (posicaoNoCiclo === 1 && contadorParcelas > 1) {
-          indicadorCiclo = " ← REAJUSTE CICLO (IGP-M acumulado dos 12 meses anteriores)"
-        } else if (posicaoNoCiclo > 1) {
-          indicadorCiclo = " (VALOR FIXO - sem variação neste ciclo)"
-        }
-      }
       
       memoriaCalculo.push(
-        `${String(contadorParcelas).padStart(2, "0")}. ${mesNome}/${indice.ano}: ${indice.valor.toFixed(4).replace(".", ",")}% → Fator: ${fatorMensal.toFixed(6)} → Acumulado: ${fatorCorrecao.toFixed(6)}${indicadorCiclo}`,
+        `| ${String(contadorParcelas).padStart(2, " ")} | ${mesNome}/${indice.ano} | ${indice.valor.toFixed(4).replace(".", ",")} | ${fatorMensal.toFixed(10)} | ${((fatorCorrecao - 1) * 100).toFixed(6)} |`
       )
     })
     
-    memoriaCalculo.push(``)
-    memoriaCalculo.push(`--- CICLO ${cicloAtual} FINALIZADO ---`)
     memoriaCalculo.push(``)
     memoriaCalculo.push(`Total de meses com índices aplicados: ${indicesDBPeriodo.length}`)
   }
@@ -962,11 +897,11 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
   memoriaCalculo.push(`Sistema: Calculadora de Atualização Monetária - CGOF/SP`)
 
   // ═════════════════════════════════════════════════════════════════════════════════
-  // PARCELAMENTO
+  // PARCELAMENTO (APENAS PARA IGP-M - Poupança não tem ciclos de IGP-M)
   // ═════════════════════════════════════════════════════════════════════════════════
   let parcelamento: { numeroParcelas: number; valorParcela: number; valorTotalParcelado: number } | undefined
 
-  if (parametros.numeroParcelas && parametros.numeroParcelas > 0) {
+  if (parametros.numeroParcelas && parametros.numeroParcelas > 0 && nomeIndice === "IGP-M") {
     const numeroParcelas = Math.floor(parametros.numeroParcelas)
     
     // USAR DATA ATUAL PARA CALCULAR OS CICLOS (não a data inicial)
@@ -1018,17 +953,27 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         memoriaCalculo.push(`IGP-M acumulado (${ciclo.periodoIGPMDescricao}): ${igpmAcumulado.toFixed(4)}%`)
         memoriaCalculo.push(`Fórmula: (1 + m1) × (1 + m2) × ... × (1 + m12) − 1`)
         memoriaCalculo.push(``)
-        memoriaCalculo.push(`Detalhamento dos 12 meses:`)
+        memoriaCalculo.push(`Detalhamento dos 12 meses (Tabela):`)
+        memoriaCalculo.push(``)
         
+        // Header da tabela
+        memoriaCalculo.push(`| Mês | Período | Taxa (%) | Fator Mensal | Acumulado |`)
+        memoriaCalculo.push(`|-----|---------|----------|--------------|-----------|`)
         
+        // Linhas da tabela
+        let fatorAcumulado = 1
         indicesIGPMCiclo.forEach((ind, idx) => {
           const mesNome = [
             "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
             "Jul", "Ago", "Set", "Out", "Nov", "Dez"
           ][ind.mes - 1]
-          memoriaCalculo.push(`  m${idx + 1} (${mesNome}/${ind.ano}): ${ind.valor.toFixed(6)}%`)
+          const fatorMensal = 1 + ind.valor / 100
+          fatorAcumulado *= fatorMensal
+          const acumuladoPercent = (fatorAcumulado - 1) * 100
+          memoriaCalculo.push(`| ${idx + 1} | ${mesNome}/${ind.ano} | ${ind.valor.toFixed(6)} | ${fatorMensal.toFixed(10)} | ${acumuladoPercent.toFixed(6)} |`)
         })
         
+        memoriaCalculo.push(``)
         if (ciclo.numero > 1) {
           // Aplicar o reajuste IGP-M do ciclo anterior no início deste ciclo
           const fatorReajusteAnterior = 1 + cicloAnteriorDetalhes[cicloAnteriorDetalhes.length - 1].igpmAcumulado / 100
