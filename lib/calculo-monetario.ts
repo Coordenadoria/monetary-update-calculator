@@ -1023,6 +1023,7 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     let valorParcelamentoComIGPM = parametros.valorOriginal
     let mesesParcelamento = 0
     let contadorIGPM = 0
+    const ciclasIGPMDetalhado: Array<{ ciclo: number; meses: string; igpmAcumulado: number }> = []
     
     // Simular o crescimento do parcelamento aplicando Poupança + IGP-M a cada 12 meses
     for (let parcela = 1; parcela <= numeroParcelas; parcela++) {
@@ -1057,6 +1058,14 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
             const fatorIGPM = 1 + igpmInfo.valor / 100
             valorParcelamentoComIGPM *= fatorIGPM
             contadorIGPM++
+            
+            // Registrar detalhes do ciclo
+            const mesesNoCiclo = igpmDoCiclo.map(idx => `${idx.mes}/${idx.ano}`).join(", ")
+            ciclasIGPMDetalhado.push({
+              ciclo: contadorIGPM,
+              meses: mesesNoCiclo,
+              igpmAcumulado: igpmInfo.valor
+            })
           }
         }
       }
@@ -1083,6 +1092,20 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     memoriaCalculo.push(`Valor de cada parcela: R$ ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
     memoriaCalculo.push(`Ciclos de IGP-M aplicados: ${contadorIGPM}`)
     memoriaCalculo.push(``)
+    
+    // Mostrar detalhes dos ciclos de IGP-M
+    if (ciclasIGPMDetalhado.length > 0) {
+      memoriaCalculo.push(`Detalhes dos Ciclos de IGP-M:`)
+      memoriaCalculo.push(``)
+      for (const ciclo of ciclasIGPMDetalhado) {
+        memoriaCalculo.push(`Ciclo ${ciclo.ciclo} (Parcelas ${(ciclo.ciclo - 1) * 12 + 1} a ${ciclo.ciclo * 12}):`)
+        memoriaCalculo.push(`  Período: ${ciclo.meses}`)
+        memoriaCalculo.push(`  IGP-M acumulado: ${ciclo.igpmAcumulado.toFixed(4).replace(".", ",")}%`)
+        memoriaCalculo.push(``)
+      }
+      memoriaCalculo.push(``)
+    }
+    
     memoriaCalculo.push(`Cronograma de Pagamento:`)
     memoriaCalculo.push(``)
     memoriaCalculo.push(`| Parcela | Valor (R$) |`)

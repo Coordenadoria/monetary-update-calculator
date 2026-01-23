@@ -11,14 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Calculator, FileText, AlertTriangle, Download, Database, RefreshCw } from "lucide-react" // Added RefreshCw icon
+import { Calculator, Database, AlertTriangle, Download } from "lucide-react"
 import {
   calcularCorrecaoMonetaria,
   validarDatas,
   type ParametrosCalculo,
   type ResultadoCalculo,
 } from "@/lib/calculo-monetario"
-import { atualizarIndicesNoCache } from "@/lib/fetch-indices"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
 
@@ -66,8 +65,6 @@ export default function CalculadoraAtualizacaoMonetaria() {
 
   const [resultado, setResultado] = useState<ResultadoCalculo | null>(null)
   const [erros, setErros] = useState<string[]>([])
-  const [atualizandoIndices, setAtualizandoIndices] = useState(false)
-  const [mensagemAtualizacao, setMensagemAtualizacao] = useState<string>("")
 
   const obterDataAtualFormatada = () => {
     const agora = new Date()
@@ -151,25 +148,6 @@ export default function CalculadoraAtualizacaoMonetaria() {
       return
     }
 
-    // ✅ ATUALIZAR ÍNDICES ANTES DO CÁLCULO
-    setAtualizandoIndices(true)
-    setMensagemAtualizacao("🔄 Sincronizando índices com Banco Central...")
-
-    try {
-      const sucesso = await atualizarIndicesNoCache()
-      if (!sucesso) {
-        console.warn("⚠️ Alguns índices não foram atualizados, usando cache local")
-        setMensagemAtualizacao("⚠️ Alguns índices usarão dados em cache")
-      } else {
-        setMensagemAtualizacao("✅ Índices atualizados com sucesso")
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar índices:", error)
-      setMensagemAtualizacao("⚠️ Usando dados em cache local")
-    }
-
-    setAtualizandoIndices(false)
-
     // ✅ PROSSEGUIR COM O CÁLCULO USANDO OS ÍNDICES ATUALIZADOS
     const dataInicial = {
       dia: Number.parseInt(formData.dataInicial.dia),
@@ -206,11 +184,9 @@ export default function CalculadoraAtualizacaoMonetaria() {
       const resultadoCalculo = await calcularCorrecaoMonetaria(parametros)
       setResultado(resultadoCalculo)
       setErros(errosData)
-      setMensagemAtualizacao("")
     } catch (error) {
       setErros([`Erro no cálculo: ${error instanceof Error ? error.message : "Erro desconhecido"}`])
       setResultado(null)
-      setMensagemAtualizacao("")
     }
   }
 
@@ -426,83 +402,6 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
     img.src = "/images/secretaria-saude-sp.png"
   }
 
-  const atualizarIndicesOficiais = async () => {
-    setAtualizandoIndices(true)
-    setMensagemAtualizacao("Iniciando atualização dos índices das fontes oficiais...")
-
-    try {
-      setMensagemAtualizacao("Buscando dados do Banco Central e FGV...")
-      // Fetch from official sources
-      const response = await fetch("/api/atualizar-indices", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.ok) {
-        const resultado = await response.json()
-        
-        // Salvar dados atualizados no localStorage
-        if (typeof window !== "undefined") {
-          try {
-            // Salvar cada índice no localStorage
-            if (resultado.data?.["IGP-M"]?.length > 0) {
-              localStorage.setItem("indices_IGP-M", JSON.stringify(resultado.data["IGP-M"]))
-            }
-            if (resultado.data?.["IPCA"]?.length > 0) {
-              localStorage.setItem("indices_IPCA", JSON.stringify(resultado.data["IPCA"]))
-            }
-            if (resultado.data?.["INPC"]?.length > 0) {
-              localStorage.setItem("indices_INPC", JSON.stringify(resultado.data["INPC"]))
-            }
-            if (resultado.data?.["Poupança"]?.length > 0) {
-              localStorage.setItem("indices_Poupança", JSON.stringify(resultado.data["Poupança"]))
-            }
-            if (resultado.data?.["SELIC"]?.length > 0) {
-              localStorage.setItem("indices_SELIC", JSON.stringify(resultado.data["SELIC"]))
-            }
-            if (resultado.data?.["CDI"]?.length > 0) {
-              localStorage.setItem("indices_CDI", JSON.stringify(resultado.data["CDI"]))
-            }
-            // Guardar timestamp da atualização
-            localStorage.setItem("indices_atualizado_em", new Date().toISOString())
-            console.log("✓ Dados salvos no cache local")
-          } catch (e) {
-            console.warn("Aviso: não foi possível salvar dados no cache", e)
-          }
-        }
-        
-        setMensagemAtualizacao(
-          `✓ Sucesso! ${resultado.total || resultado.successCount || 0} índice(s) foram atualizados das fontes oficiais (Banco Central/FGV/IBGE).`,
-        )
-        toast({
-          title: "Atualização Concluída",
-          description: resultado.message || `${resultado.total} índices atualizados com sucesso`,
-        })
-        setTimeout(() => {
-          setMensagemAtualizacao("")
-        }, 8000)
-      } else {
-        const erro = await response.json()
-        throw new Error(erro.message || "Erro ao atualizar índices")
-      }
-    } catch (error) {
-      const mensagem = error instanceof Error ? error.message : "Erro desconhecido"
-      setMensagemAtualizacao(`✗ Erro: ${mensagem}. Usando dados locais como fallback.`)
-      toast({
-        variant: "destructive",
-        title: "Erro na Atualização",
-        description: mensagem,
-      })
-      setTimeout(() => {
-        setMensagemAtualizacao("")
-      }, 8000)
-    } finally {
-      setAtualizandoIndices(false)
-    }
-  }
-
   const isIGPM = formData.indice.includes("IGP-M")
   const isPoupanca = formData.indice.includes("Poupança")
 
@@ -549,49 +448,6 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
                 Visualizar e Editar Índices
               </Button>
             </Link>
-            
-            <Button
-              onClick={atualizarIndicesOficiais}
-              disabled={atualizandoIndices}
-              variant="outline"
-              className="w-full sm:w-auto bg-transparent"
-            >
-              {atualizandoIndices ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
-                  Atualizando...
-                </>
-              ) : (
-                <>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Atualizar Índices dos Sites Oficiais
-                </>
-              )}
-            </Button>
-
-            {mensagemAtualizacao && (
-              <Alert
-                className={
-                  mensagemAtualizacao.includes("sucesso")
-                    ? "border-green-200 bg-green-50"
-                    : mensagemAtualizacao.includes("Erro")
-                      ? "border-red-200 bg-red-50"
-                      : "border-blue-200 bg-blue-50"
-                }
-              >
-                <AlertDescription
-                  className={
-                    mensagemAtualizacao.includes("sucesso")
-                      ? "text-green-700"
-                      : mensagemAtualizacao.includes("Erro")
-                        ? "text-red-700"
-                        : "text-blue-700"
-                  }
-                >
-                  {mensagemAtualizacao}
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
         </div>
 
@@ -905,32 +761,20 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
 
             <Separator className="my-6" />
 
-            {/* Indicador de Status de Atualização de Índices */}
-            {mensagemAtualizacao && (
-              <Alert className={`mb-4 ${mensagemAtualizacao.startsWith("✅") ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}>
-                <AlertDescription className={mensagemAtualizacao.startsWith("✅") ? "text-green-800" : "text-amber-800"}>
-                  {mensagemAtualizacao}
-                </AlertDescription>
-              </Alert>
-            )}
-
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <Button 
                 onClick={executarCalculo} 
                 className="w-full sm:w-auto" 
                 size="lg"
-                disabled={atualizandoIndices}
               >
-                {atualizandoIndices && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-                {!atualizandoIndices && <Calculator className="mr-2 h-4 w-4" />}
-                {atualizandoIndices ? "Atualizando Índices..." : "Executar o Cálculo"}
+                <Calculator className="mr-2 h-4 w-4" />
+                Executar o Cálculo
               </Button>
               <Button
                 onClick={limparFormulario}
                 variant="outline"
                 className="w-full sm:w-auto bg-transparent"
                 size="lg"
-                disabled={atualizandoIndices}
               >
                 Limpar
               </Button>
