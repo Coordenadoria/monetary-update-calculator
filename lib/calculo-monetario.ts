@@ -1016,29 +1016,11 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const fatorIGPM = 1 + igpmAcumulado / 100
         
         memoriaCalculo.push(`IGP-M acumulado (${mesesParaUsar.length} mês(es)): ${igpmAcumulado.toFixed(4)}%`)
-        memoriaCalculo.push(`Fórmula: (1 + m1) × (1 + m2) × ... × (1 + m${mesesParaUsar.length}) − 1`)
-        memoriaCalculo.push(``)
-        memoriaCalculo.push(`Detalhamento dos meses (Tabela):`)
         memoriaCalculo.push(``)
         
-        // Header da tabela
-        memoriaCalculo.push(`| Mês | Período | Taxa (%) | Fator Mensal | Acumulado |`)
-        memoriaCalculo.push(`|-----|---------|----------|--------------|-----------|`)
-        
-        // Linhas da tabela
-        let fatorAcumulado = 1
-        mesesParaUsar.forEach((ind, idx) => {
-          const mesNome = [
-            "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-            "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-          ][ind.mes - 1]
-          const fatorMensal = 1 + ind.valor / 100
-          fatorAcumulado *= fatorMensal
-          const acumuladoPercent = (fatorAcumulado - 1) * 100
-          memoriaCalculo.push(`| ${idx + 1} | ${mesNome}/${ind.ano} | ${ind.valor.toFixed(6)} | ${fatorMensal.toFixed(10)} | ${acumuladoPercent.toFixed(6)} |`)
-        })
-        
+        memoriaCalculo.push(`Reajuste a ser aplicado: ${igpmAcumulado.toFixed(4)}%`)
         memoriaCalculo.push(``)
+                memoriaCalculo.push(``)
         if (ciclo.numero > 1) {
           // Aplicar o reajuste IGP-M do ciclo anterior no início deste ciclo
           const fatorReajusteAnterior = 1 + cicloAnteriorDetalhes[cicloAnteriorDetalhes.length - 1].igpmAcumulado / 100
@@ -1197,29 +1179,11 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
           const fatorIGPM = 1 + igpmAcumulado / 100
           
           memoriaCalculo.push(`IGP-M acumulado (${mesesParaUsar.length} mês(es)): ${igpmAcumulado.toFixed(4)}%`)
-          memoriaCalculo.push(`Fórmula: (1 + m1) × (1 + m2) × ... × (1 + m${mesesParaUsar.length}) − 1`)
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`Detalhamento dos meses (Tabela):`)
           memoriaCalculo.push(``)
           
-          // Header da tabela
-          memoriaCalculo.push(`| Mês | Período | Taxa (%) | Fator Mensal | Acumulado |`)
-          memoriaCalculo.push(`|-----|---------|----------|--------------|-----------|`)
-          
-          // Linhas da tabela
-          let fatorAcumulado = 1
-          mesesParaUsar.forEach((ind, idx) => {
-            const mesNome = [
-              "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-              "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-            ][ind.mes - 1]
-            const fatorMensal = 1 + ind.valor / 100
-            fatorAcumulado *= fatorMensal
-            const acumuladoPercent = (fatorAcumulado - 1) * 100
-            memoriaCalculo.push(`| ${idx + 1} | ${mesNome}/${ind.ano} | ${ind.valor.toFixed(6)} | ${fatorMensal.toFixed(10)} | ${acumuladoPercent.toFixed(6)} |`)
-          })
-          
+          memoriaCalculo.push(`Reajuste a ser aplicado: ${igpmAcumulado.toFixed(4)}%`)
           memoriaCalculo.push(``)
+          
           if (ciclo.numero > 1) {
             // Aplicar o reajuste IGP-M do ciclo anterior no início deste ciclo
             const fatorReajusteAnterior = 1 + cicloAnteriorDetalhesPoupanca[cicloAnteriorDetalhesPoupanca.length - 1].igpmAcumulado / 100
