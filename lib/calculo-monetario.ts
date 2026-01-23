@@ -574,8 +574,10 @@ export async function obterIndicesPeriodo(
 
 // Cálculo principal
 export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): Promise<ResultadoCalculo> {
+  console.log("[CALCULO] Iniciando calcularCorrecaoMonetaria com índice:", parametros.indice, "e numeroParcelas:", parametros.numeroParcelas)
   const memoriaCalculo: string[] = []
   const nomeIndice = getIndiceNome(parametros.indice)
+  console.log("[CALCULO] Nome do índice:", nomeIndice)
 
   // REGRA OBRIGATÓRIA: Valor das parcelas permanece fixo durante cada ciclo de 12 parcelas
   // e é reajustado exclusivamente pelo IGP-M/FGV somente ao final de cada período de 12 parcelas
@@ -901,11 +903,14 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
   // ═════════════════════════════════════════════════════════════════════════════════
   let parcelamento: { numeroParcelas: number; valorParcela: number; valorTotalParcelado: number } | undefined
 
+  console.log("[CALC] numeroParcelas:", parametros.numeroParcelas, "indice:", nomeIndice)
   if (parametros.numeroParcelas && parametros.numeroParcelas > 0) {
+    console.log("[CALC] Iniciando parcelamento para", nomeIndice)
+    console.log("[CALCULO] Entrando na seção de parcelamento com numeroParcelas:", parametros.numeroParcelas, "e nomeIndice:", nomeIndice)
     const numeroParcelas = Math.floor(parametros.numeroParcelas)
     
     if (nomeIndice === "IGP-M") {
-      // PARCELAMENTO IGP-M COM CICLOS DE 12 PARCELAS
+      console.log("[CALCULO] Processando parcelamento para IGP-M")
       // USAR DATA ATUAL PARA CALCULAR OS CICLOS (não a data inicial)
       const dataParcelamento = parametros.dataParcelamento || {
         dia: new Date().getDate(),
@@ -1014,7 +1019,7 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     memoriaCalculo.push(`=== CÁLCULO FINAL DO PARCELAMENTO ===`)
     memoriaCalculo.push(``)
     } else if (nomeIndice === "Poupança") {
-      // PARCELAMENTO POUPANÇA (SIMPLES - sem ciclos de 12 parcelas)
+      console.log("[CALCULO] Processando parcelamento para Poupança")
       memoriaCalculo.push(``)
       memoriaCalculo.push(`=== PARCELAMENTO EM ${numeroParcelas} PARCELAS (POUPANÇA) ===`)
       memoriaCalculo.push(``)
@@ -1073,6 +1078,8 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     fontes,
     parcelamento,
   }
+  console.log("[CALCULO] Função calcularCorrecaoMonetaria concluída com sucesso")
+  return resultado
 }
 
 export function validarDatas(dataInicial: DataCalculo, dataFinal: DataCalculo): string[] {
