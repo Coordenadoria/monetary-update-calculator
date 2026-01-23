@@ -1070,6 +1070,7 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     }
   }
 
+  console.log("[CALCULO] Função calcularCorrecaoMonetaria concluída com sucesso")
   return {
     valorOriginal: parametros.valorOriginal,
     valorCorrigido,
@@ -1090,8 +1091,6 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     fontes,
     parcelamento,
   }
-  console.log("[CALCULO] Função calcularCorrecaoMonetaria concluída com sucesso")
-  return resultado
 }
 
 export function validarDatas(dataInicial: DataCalculo, dataFinal: DataCalculo): string[] {
