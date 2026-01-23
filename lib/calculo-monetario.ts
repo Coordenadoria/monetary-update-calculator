@@ -182,11 +182,18 @@ function calcularIGPMAcumulado12Meses(indices: IndiceData[]): { valor: number; d
 // FUNÇÃO: Calcular ciclos de parcelamento com base na data ATUAL
 // ═══════════════════════════════════════════════════════════════════════════════
 // 
-// IMPORTANTE: Para parcelamento com 24 parcelas iniciado em 3/2026:
-// - Ciclo 1 (Parcelas 1-12): 3/2026 a 2/2027 (usar IGP-M de 2026-2027)
-// - Ciclo 2 (Parcelas 13-24): 3/2027 a 2/2028 (usar IGP-M de 2027-2028)
+// IMPORTANTE: IGP-M acumulado é calculado com os 12 meses ANTERIORES ao período
 //
-// A data de referência é A DATA ATUAL (dataParcelamento), não a data inicial!
+// Exemplo com 24 parcelas iniciado em 3/2026:
+// - Ciclo 1 (Parcelas 1-12): 
+//   ├─ Período de pagamento: 3/2026 a 2/2027
+//   └─ IGP-M acumulado: 12 meses ANTES = 3/2025 a 2/2026 ✓
+//
+// - Ciclo 2 (Parcelas 13-24):
+//   ├─ Período de pagamento: 3/2027 a 2/2028
+//   └─ IGP-M acumulado: 12 meses ANTES = 3/2026 a 2/2027 ✓
+//
+// A data de referência é A DATA ATUAL (dataParcelamento)
 // ═══════════════════════════════════════════════════════════════════════════════
 function calcularIndicesPorCicloDeParcelamento(
   numeroParcelas: number,
@@ -200,6 +207,9 @@ function calcularIndicesPorCicloDeParcelamento(
     dataInicio: DataCalculo
     dataFim: DataCalculo
     periodoDescricao: string
+    dataInicioIGPM: DataCalculo  // Período para buscar IGP-M (12 meses antes)
+    dataFimIGPM: DataCalculo
+    periodoIGPMDescricao: string
   }>
 } {
   const ciclos: Array<{
@@ -209,6 +219,9 @@ function calcularIndicesPorCicloDeParcelamento(
     dataInicio: DataCalculo
     dataFim: DataCalculo
     periodoDescricao: string
+    dataInicioIGPM: DataCalculo
+    dataFimIGPM: DataCalculo
+    periodoIGPMDescricao: string
   }> = []
 
   let mesAtual = dataParcelamento.mes
@@ -237,9 +250,41 @@ function calcularIndicesPorCicloDeParcelamento(
     }
 
     const dataFimCiclo: DataCalculo = {
-      dia: Math.min(diaAtual, 28), // Evitar dia 31 em meses com menos dias
+      dia: Math.min(diaAtual, 28),
       mes: mesF,
       ano: anoF,
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CALCULAR PERÍODO IGP-M (12 meses ANTES do ciclo)
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    // Data de início do IGP-M: 12 meses ANTES da data inicial do ciclo
+    let mesIGPMInicio = mesAtual - 12
+    let anoIGPMInicio = anoAtual
+    while (mesIGPMInicio <= 0) {
+      mesIGPMInicio += 12
+      anoIGPMInicio -= 1
+    }
+
+    const dataInicioIGPM: DataCalculo = {
+      dia: Math.min(diaAtual, 28),
+      mes: mesIGPMInicio,
+      ano: anoIGPMInicio,
+    }
+
+    // Data de fim do IGP-M: 1 mês ANTES da data final do ciclo
+    let mesIGPMFim = mesF - 1
+    let anoIGPMFim = anoF
+    if (mesIGPMFim <= 0) {
+      mesIGPMFim += 12
+      anoIGPMFim -= 1
+    }
+
+    const dataFimIGPM: DataCalculo = {
+      dia: Math.min(diaAtual, 28),
+      mes: mesIGPMFim,
+      ano: anoIGPMFim,
     }
 
     const nomeMeses = [
@@ -247,6 +292,7 @@ function calcularIndicesPorCicloDeParcelamento(
       "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ]
     const descricao = `${nomeMeses[dataInicioCiclo.mes - 1]}/${dataInicioCiclo.ano} a ${nomeMeses[dataFimCiclo.mes - 1]}/${dataFimCiclo.ano}`
+    const descricaoIGPM = `${nomeMeses[dataInicioIGPM.mes - 1]}/${dataInicioIGPM.ano} a ${nomeMeses[dataFimIGPM.mes - 1]}/${dataFimIGPM.ano}`
 
     ciclos.push({
       numero: numeroCiclo,
@@ -255,6 +301,9 @@ function calcularIndicesPorCicloDeParcelamento(
       dataInicio: dataInicioCiclo,
       dataFim: dataFimCiclo,
       periodoDescricao: descricao,
+      dataInicioIGPM,
+      dataFimIGPM,
+      periodoIGPMDescricao: descricaoIGPM,
     })
 
     // Preparar para próximo ciclo
@@ -1131,12 +1180,18 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
     for (const ciclo of ciclosInfo.ciclos) {
       memoriaCalculo.push(``)
       memoriaCalculo.push(`CICLO ${ciclo.numero} (Parcelas ${ciclo.parcelaInicio} a ${ciclo.parcelaFim}):`)
-      memoriaCalculo.push(`Período: ${ciclo.periodoDescricao}`)
+      memoriaCalculo.push(`Período de pagamento: ${ciclo.periodoDescricao}`)
       
-      // Buscar índices IGP-M do ciclo
+      // ═══════════════════════════════════════════════════════════════════════════════
+      // IMPORTANTE: IGP-M acumulado = 12 meses ANTES do período de pagamento
+      // ═══════════════════════════════════════════════════════════════════════════════
+      memoriaCalculo.push(`Período para cálculo IGP-M acumulado (12 meses ANTES): ${ciclo.periodoIGPMDescricao}`)
+      memoriaCalculo.push(``)
+      
+      // Buscar índices IGP-M do PERÍODO ANTERIOR (12 meses antes)
       const indicesIGPMCiclo = await obterIndicesPeriodo(
-        ciclo.dataInicio,
-        ciclo.dataFim,
+        ciclo.dataInicioIGPM,
+        ciclo.dataFimIGPM,
         "IGP-M"
       )
       
@@ -1146,8 +1201,11 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const igpmAcumulado = igpmInfo.valor
         const fatorIGPM = 1 + igpmAcumulado / 100
         
-        memoriaCalculo.push(`IGP-M acumulado: ${igpmAcumulado.toFixed(4)}%`)
-        memoriaCalculo.push(`Meses do ciclo:`)
+        memoriaCalculo.push(`IGP-M acumulado (${ciclo.periodoIGPMDescricao}): ${igpmAcumulado.toFixed(4)}%`)
+        memoriaCalculo.push(`Fórmula: (1 + m1) × (1 + m2) × ... × (1 + m12) − 1`)
+        memoriaCalculo.push(``)
+        memoriaCalculo.push(`Detalhamento dos 12 meses:`)
+        
         
         indicesIGPMCiclo.forEach((ind, idx) => {
           const mesNome = [
