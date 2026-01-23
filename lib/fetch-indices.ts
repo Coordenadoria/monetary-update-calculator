@@ -63,7 +63,7 @@ async function fetchIGPMFromIpeadata(): Promise<IndiceData[]> {
  */
 async function fetchPoupancaFromBCB(): Promise<IndiceData[]> {
   try {
-    const url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.25/dados?formato=json&dataInicial=01/01/1989&dataFinal=31/12/2025"
+    const url = "/api/proxy-bcb?serie=25&dataInicial=01/01/1989&dataFinal=31/12/2025"
     const response = await fetch(url, { cache: "no-store", timeout: 10000 })
 
     if (!response.ok) {
@@ -122,7 +122,7 @@ async function fetchPoupancaFromBCB(): Promise<IndiceData[]> {
  */
 async function fetchIGPMFromBCB(): Promise<IndiceData[]> {
   try {
-    const url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json"
+    const url = "/api/proxy-bcb?serie=189"
     const response = await fetch(url, { cache: "no-store", timeout: 10000 })
 
     if (!response.ok) {

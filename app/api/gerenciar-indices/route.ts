@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
       try {
         // Poupança está disponível a partir de maio/2012
         // Usar uma janela de 10 anos (máximo permitido pela API)
-        const dataInicial = "23/01/2016" // 10 anos atrás
+        const dataInicial = "01/01/1989" // Desde início
         const dataFinal = formatDateBrazilian(new Date())
 
         const respPoupanca = await fetch(
-          `https://api.bcb.gov.br/dados/serie/bcdata.sgs.195/dados?formato=json&dataInicial=${dataInicial}&dataFinal=${dataFinal}`,
+          `/api/proxy-bcb?serie=25&dataInicial=${encodeURIComponent(dataInicial)}&dataFinal=${encodeURIComponent(dataFinal)}`,
           { cache: "no-store" }
         )
 
@@ -52,12 +52,12 @@ export async function GET(request: NextRequest) {
     // Se nenhuma série foi especificada, buscar ambas
     if (indiceParam === "all" || !indiceParam) {
       try {
-        const dataInicial = "23/01/2016"
+        const dataInicial = "01/01/1989"
         const dataFinal = formatDateBrazilian(new Date())
 
         const [respPoupanca, igpmData] = await Promise.all([
           fetch(
-            `https://api.bcb.gov.br/dados/serie/bcdata.sgs.195/dados?formato=json&dataInicial=${dataInicial}&dataFinal=${dataFinal}`,
+            `/api/proxy-bcb?serie=25&dataInicial=${encodeURIComponent(dataInicial)}&dataFinal=${encodeURIComponent(dataFinal)}`,
             { cache: "no-store" }
           ),
           fetchIGPMHistorico(),
