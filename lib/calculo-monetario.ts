@@ -1005,19 +1005,35 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
       }
     }
     
-    // Calcular valor final da parcela
-    const valorParcela = valorParcelamentoComIGPM / numeroParcelas
-    const valorTotalParcelado = valorParcela * numeroParcelas
-    
-    parcelamento = {
-      numeroParcelas,
-      valorParcela,
-      valorTotalParcelado,
-    }
-    
-    memoriaCalculo.push(``)
-    memoriaCalculo.push(`=== CÁLCULO FINAL DO PARCELAMENTO ===`)
-    memoriaCalculo.push(``)
+      // Calcular valor final da parcela
+      const valorParcela = valorParcelamentoComIGPM / numeroParcelas
+      const valorTotalParcelado = valorParcela * numeroParcelas
+      
+      parcelamento = {
+        numeroParcelas,
+        valorParcela,
+        valorTotalParcelado,
+      }
+      
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`=== CÁLCULO FINAL DO PARCELAMENTO ===`)
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`Valor original: R$ ${parametros.valorOriginal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+      memoriaCalculo.push(`Valor após todos os reajustes IGP-M: R$ ${valorParcelamentoComIGPM.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+      memoriaCalculo.push(`Número de parcelas: ${numeroParcelas}`)
+      memoriaCalculo.push(`Valor de cada parcela: R$ ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+      memoriaCalculo.push(`Valor total parcelado: R$ ${valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`Cronograma de Pagamento:`)
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`| Parcela | Valor (R$) |`)
+      memoriaCalculo.push(`|---------|------------|`)
+      for (let i = 1; i <= numeroParcelas; i++) {
+        memoriaCalculo.push(`| ${i} | ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |`)
+      }
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`Total: R$ ${valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+      memoriaCalculo.push(``)
     } else if (nomeIndice === "Poupança") {
       console.log("[CALCULO] Processando parcelamento para Poupança")
       memoriaCalculo.push(``)
@@ -1035,27 +1051,23 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
       memoriaCalculo.push(`Total parcelado: R$ ${valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
       memoriaCalculo.push(``)
       
+      memoriaCalculo.push(`=== CRONOGRAMA DE PAGAMENTO ===`)
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`| Parcela | Valor (R$) |`)
+      memoriaCalculo.push(`|---------|------------|`)
+      for (let i = 1; i <= numeroParcelas; i++) {
+        memoriaCalculo.push(`| ${i} | ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |`)
+      }
+      memoriaCalculo.push(``)
+      memoriaCalculo.push(`Total: R$ ${valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
+      memoriaCalculo.push(``)
+      
       parcelamento = {
         numeroParcelas,
         valorParcela,
         valorTotalParcelado,
       }
-    }    memoriaCalculo.push(`Valor original: R$ ${parametros.valorOriginal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
-    memoriaCalculo.push(`Valor após todos os reajustes IGP-M: R$ ${valorParcelamentoComIGPM.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
-    memoriaCalculo.push(`Número de parcelas: ${numeroParcelas}`)
-    memoriaCalculo.push(`Valor de cada parcela: R$ ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
-    memoriaCalculo.push(`Valor total parcelado: R$ ${valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
-    memoriaCalculo.push(``)
-    memoriaCalculo.push(`Cronograma de Pagamento:`)
-    memoriaCalculo.push(``)
-    memoriaCalculo.push(`| Parcela | Valor (R$) |`)
-    memoriaCalculo.push(`|---------|------------|`)
-    for (let i = 1; i <= numeroParcelas; i++) {
-      memoriaCalculo.push(`| ${i} | ${valorParcela.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} |`)
     }
-    memoriaCalculo.push(``)
-    memoriaCalculo.push(`Total: R$ ${valorTotalParcelado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
-    memoriaCalculo.push(``)
   }
 
   return {
