@@ -850,7 +850,7 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
                   <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-sm text-gray-600 mb-1">Valor Atualizado</p>
                     <p className="text-2xl font-bold text-green-700">
-                      R$ {(resultado.valorAtualizado ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {(resultado.valorCorrigido ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
