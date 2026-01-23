@@ -63,7 +63,8 @@ async function fetchIGPMFromIpeadata(): Promise<IndiceData[]> {
  */
 async function fetchPoupancaFromBCB(): Promise<IndiceData[]> {
   try {
-    const url = "/api/proxy-bcb?serie=25&dataInicial=01/01/1989&dataFinal=31/12/2025"
+    // Série 25 requer 10 anos máximo - deixar servidor calcular datas automaticamente
+    const url = "/api/proxy-bcb?serie=25"
     const response = await fetch(url, { cache: "no-store", timeout: 10000 })
 
     if (!response.ok) {
