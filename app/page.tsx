@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Calculator, FileText, AlertTriangle, Download } from "lucide-react" // Added Download icon
+import { Calculator, FileText, AlertTriangle, Download, Database } from "lucide-react" // Added Download icon
 import {
   calcularCorrecaoMonetaria,
   validarDatas,
@@ -19,6 +19,7 @@ import {
   type ResultadoCalculo,
 } from "@/lib/calculo-monetario"
 import { useToast } from "@/components/ui/use-toast"
+import Link from "next/link"
 
 interface FormData {
   descricao: string
@@ -523,6 +524,13 @@ ${resultado?.memoriaCalculo.join("\n") || ""}
           </div>
 
           <div className="flex flex-col gap-3">
+            <Link href="/indices" className="w-full">
+              <Button variant="outline" className="w-full gap-2 bg-blue-50 border-blue-200 hover:bg-blue-100">
+                <Database className="h-4 w-4" />
+                Visualizar e Editar Índices
+              </Button>
+            </Link>
+            
             <Button
               onClick={atualizarIndicesOficiais}
               disabled={atualizandoIndices}

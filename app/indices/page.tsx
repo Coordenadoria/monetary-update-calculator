@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Plus, Edit, Save, X, Loader2, ArrowLeft } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Plus, Edit, Save, X, Loader2, ArrowLeft, RefreshCw, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { obterIndicesAtualizados, type IndiceData } from "@/lib/indices-data" // Importar obterIndicesAtualizados
 import Link from "next/link"
@@ -46,6 +47,7 @@ export default function IndicesPage() {
   const [formYear, setFormYear] = useState("")
   const [formValue, setFormValue] = useState("")
   const [saving, setSaving] = useState(false)
+  const [atualizando, setAtualizando] = useState(false)
 
   const fetchIndices = async () => {
     setLoading(true)
@@ -84,6 +86,56 @@ export default function IndicesPage() {
   useEffect(() => {
     fetchIndices()
   }, [])
+
+  // Atualizar índices dos sites oficiais
+  const handleAtualizarDosBCB = async () => {
+    setAtualizando(true)
+    try {
+      const response = await fetch("/api/gerenciar-indices")
+      const novosDados = await response.json()
+
+      if (response.ok && novosDados.error) {
+        toast.error("Não foi possível conectar aos servidores do BCB")
+        setAtualizando(false)
+        return
+      }
+
+      // Converter dados do BCB para formato esperado
+      const allIndices: Indice[] = []
+      for (const [name, items] of Object.entries(novosDados)) {
+        if (Array.isArray(items)) {
+          items.forEach((item: any) => {
+            if (item.mes && item.ano && item.valor !== undefined) {
+              allIndices.push({
+                name,
+                month: item.mes,
+                year: item.ano,
+                value: item.valor,
+                mes: item.mes,
+                ano: item.ano,
+                valor: item.valor,
+              })
+            }
+          })
+        }
+      }
+
+      setIndices(
+        allIndices.sort((a, b) => {
+          if (a.name !== b.name) return a.name.localeCompare(b.name)
+          if (a.year !== b.year) return a.year - b.year
+          return a.month - b.month
+        }),
+      )
+
+      toast.success("Índices atualizados com sucesso dos servidores oficiais do BCB!")
+    } catch (error) {
+      console.error("Erro ao atualizar índices:", error)
+      toast.error("Erro ao conectar com os servidores do BCB")
+    } finally {
+      setAtualizando(false)
+    }
+  }
 
   const handleOpenDialog = (indice?: Indice) => {
     console.log("Indice recebido por handleOpenDialog:", indice) // Para depuração
@@ -200,11 +252,24 @@ export default function IndicesPage() {
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Gerenciar Índices</CardTitle>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="mr-2 h-4 w-4" /> Adicionar Novo
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleAtualizarDosBCB} disabled={atualizando} variant="outline" className="gap-2">
+                <RefreshCw className={`h-4 w-4 ${atualizando ? "animate-spin" : ""}`} />
+                {atualizando ? "Atualizando..." : "Atualizar do BCB"}
+              </Button>
+              <Button onClick={() => handleOpenDialog()}>
+                <Plus className="mr-2 h-4 w-4" /> Adicionar Novo
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
+            <Alert className="mb-6 border-blue-200 bg-blue-50">
+              <AlertCircle className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-900">
+                <strong>Dados Oficiais:</strong> Os índices são sincronizados com o Banco Central do Brasil (BCB). 
+                Você pode editar manualmente se detectar discrepâncias. Clique em "Atualizar do BCB" para sincronizar com os dados oficiais mais recentes.
+              </AlertDescription>
+            </Alert>
             {loading ? (
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
