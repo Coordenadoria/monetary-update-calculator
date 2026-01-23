@@ -57,136 +57,6 @@ async function fetchIGPMFromIpeadata(): Promise<IndiceData[]> {
   }
 }
 
-// Fetch IGP-M from FGV using Banco Central API with multi-window support (1989-2026)
-async function fetchIGPMFromFGV(): Promise<IndiceData[]> {
-  try {
-    const todosDados: IndiceData[] = []
-
-    // Janelas de 10 anos para contornar limite da API BACEN
-    const janelas = [
-      { inicio: "01/01/1989", fim: "31/12/1998" },
-      { inicio: "01/01/1999", fim: "31/12/2008" },
-      { inicio: "01/01/2009", fim: "31/12/2018" },
-      { inicio: "01/01/2019", fim: "31/12/2026" },
-    ]
-
-    for (const janela of janelas) {
-      try {
-        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.189/dados?formato=json&dataInicial=${janela.inicio}&dataFinal=${janela.fim}`
-        const response = await fetch(url, { cache: "no-store" })
-
-        if (response.ok) {
-          const data = await response.json() as Array<{ data: string; valor: string }>
-
-          for (const item of data) {
-            const [day, month, year] = item.data.split("/")
-            const valor = parseFloat(item.valor.replace(",", "."))
-
-            if (day && month && year && !isNaN(valor)) {
-              todosDados.push({
-                mes: parseInt(month),
-                ano: parseInt(year),
-                valor,
-              })
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`Erro ao buscar janela IGP-M (${janela.inicio} - ${janela.fim}):`, error)
-      }
-    }
-
-    // Remover duplicatas e ordenar
-    const mesesMap = new Map<string, IndiceData>()
-    for (const item of todosDados) {
-      const key = `${item.mes}-${item.ano}`
-      // Manter o último valor do mês
-      if (!mesesMap.has(key) || item.mes > 0) {
-        mesesMap.set(key, item)
-      }
-    }
-
-    const indices = Array.from(mesesMap.values()).sort((a, b) => {
-      if (a.ano !== b.ano) return a.ano - b.ano
-      return a.mes - b.mes
-    })
-
-    console.log(`[FETCH] IGP-M: ${indices.length} registros fetched from Banco Central (1989-2026)`)
-    return indices
-  } catch (error) {
-    console.error("Error fetching IGP-M from Banco Central:", error)
-    return []
-  }
-}
-
-// Fetch IPCA from IBGE
-async function fetchIPCAFromIBGE(): Promise<IndiceData[]> {
-  try {
-    // IBGE SGS API for IPCA (series 433)
-    const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json")
-
-    if (!response.ok) {
-      throw new Error(`IBGE API returned ${response.status}`)
-    }
-
-    const data = await response.json() as Array<{ data: string; valor: string }>
-    const indices: IndiceData[] = []
-
-    for (const item of data) {
-      const [day, month, year] = item.data.split("/")
-      const valor = parseFloat(item.valor.replace(",", "."))
-
-      if (day && month && year && !isNaN(valor)) {
-        indices.push({
-          mes: parseInt(month),
-          ano: parseInt(year),
-          valor,
-        })
-      }
-    }
-
-    console.log(`[FETCH] IPCA: ${indices.length} registros fetched from Banco Central`)
-    return indices
-  } catch (error) {
-    console.error("Error fetching IPCA from Banco Central:", error)
-    return []
-  }
-}
-
-// Fetch INPC from IBGE
-async function fetchINPCFromIBGE(): Promise<IndiceData[]> {
-  try {
-    // IBGE SGS API for INPC (series 188)
-    const response = await fetch("https://api.bcb.gov.br/dados/serie/bcdata.sgs.188/dados?formato=json")
-
-    if (!response.ok) {
-      throw new Error(`INPC API returned ${response.status}`)
-    }
-
-    const data = await response.json() as Array<{ data: string; valor: string }>
-    const indices: IndiceData[] = []
-
-    for (const item of data) {
-      const [day, month, year] = item.data.split("/")
-      const valor = parseFloat(item.valor.replace(",", "."))
-
-      if (day && month && year && !isNaN(valor)) {
-        indices.push({
-          mes: parseInt(month),
-          ano: parseInt(year),
-          valor,
-        })
-      }
-    }
-
-    console.log(`[FETCH] INPC: ${indices.length} registros fetched from Banco Central`)
-    return indices
-  } catch (error) {
-    console.error("Error fetching INPC from Banco Central:", error)
-    return []
-  }
-}
-
 // Fetch Poupança from Banco Central
 async function fetchPoupancaFromBC(): Promise<IndiceData[]> {
   try {
@@ -259,188 +129,31 @@ async function fetchPoupancaFromBC(): Promise<IndiceData[]> {
   }
 }
 
-// Fetch SELIC from Banco Central
-async function fetchSELICFromBC(): Promise<IndiceData[]> {
-  try {
-    // Banco Central SGS API for SELIC (series 11 - taxa média diária)
-    // Requires date windows (max 10 years per request)
-    const todosDados: IndiceData[] = []
-    const janelas = [
-      { inicio: "01/01/2000", fim: "31/12/2009" },
-      { inicio: "01/01/2010", fim: "31/12/2019" },
-      { inicio: "01/01/2020", fim: "31/12/2026" },
-    ]
-
-    for (const janela of janelas) {
-      try {
-        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.11/dados?formato=json&dataInicial=${janela.inicio}&dataFinal=${janela.fim}`
-        const response = await fetch(url, { cache: "no-store" })
-
-        if (!response.ok) {
-          console.warn(`BACEN SELIC janela ${janela.inicio}-${janela.fim} retornou ${response.status}`)
-          continue
-        }
-
-        const data = await response.json() as Array<{ data: string; valor: string }>
-        
-        for (const item of data) {
-          const [day, month, year] = item.data.split("/")
-          const valor = parseFloat(item.valor.replace(",", "."))
-
-          if (day && month && year && !isNaN(valor)) {
-            // Group by month, taking average of daily values
-            const mes = parseInt(month)
-            const ano = parseInt(year)
-            const existing = todosDados.find((i) => i.mes === mes && i.ano === ano)
-            if (existing) {
-              existing.valor = (existing.valor + valor) / 2
-            } else {
-              todosDados.push({
-                mes,
-                ano,
-                valor,
-              })
-            }
-          }
-        }
-      } catch (janelError) {
-        console.warn(`Erro na janela SELIC ${janela.inicio}-${janela.fim}:`, janelError)
-        continue
-      }
-    }
-
-    // Ordenar cronologicamente
-    const indicesOrdenados = todosDados.sort((a, b) => {
-      if (a.ano !== b.ano) return a.ano - b.ano
-      return a.mes - b.mes
-    })
-
-    console.log(`[FETCH] SELIC: ${indicesOrdenados.length} registros fetched from Banco Central`)
-    return indicesOrdenados
-  } catch (error) {
-    console.error("Error fetching SELIC from Banco Central:", error)
-    return []
-  }
-}
-
-// Fetch CDI from Banco Central
-async function fetchCDIFromBC(): Promise<IndiceData[]> {
-  try {
-    // Banco Central SGS API for CDI (series 12 - taxa média diária)
-    // Requires date windows (max 10 years per request)
-    const todosDados: IndiceData[] = []
-    const janelas = [
-      { inicio: "01/01/2000", fim: "31/12/2009" },
-      { inicio: "01/01/2010", fim: "31/12/2019" },
-      { inicio: "01/01/2020", fim: "31/12/2026" },
-    ]
-
-    for (const janela of janelas) {
-      try {
-        const url = `https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=${janela.inicio}&dataFinal=${janela.fim}`
-        const response = await fetch(url, { cache: "no-store" })
-
-        if (!response.ok) {
-          console.warn(`BACEN CDI janela ${janela.inicio}-${janela.fim} retornou ${response.status}`)
-          continue
-        }
-
-        const data = await response.json() as Array<{ data: string; valor: string }>
-        
-        for (const item of data) {
-          const [day, month, year] = item.data.split("/")
-          const valor = parseFloat(item.valor.replace(",", "."))
-
-          if (day && month && year && !isNaN(valor)) {
-            // Group by month, taking average of daily values
-            const mes = parseInt(month)
-            const ano = parseInt(year)
-            const existing = todosDados.find((i) => i.mes === mes && i.ano === ano)
-            if (existing) {
-              existing.valor = (existing.valor + valor) / 2
-            } else {
-              todosDados.push({
-                mes,
-                ano,
-                valor,
-              })
-            }
-          }
-        }
-      } catch (janelError) {
-        console.warn(`Erro na janela CDI ${janela.inicio}-${janela.fim}:`, janelError)
-        continue
-      }
-    }
-
-    // Ordenar cronologicamente
-    const indicesOrdenados = todosDados.sort((a, b) => {
-      if (a.ano !== b.ano) return a.ano - b.ano
-      return a.mes - b.mes
-    })
-
-    console.log(`[FETCH] CDI: ${indicesOrdenados.length} registros fetched from Banco Central`)
-    return indicesOrdenados
-  } catch (error) {
-    console.error("Error fetching CDI from Banco Central:", error)
-    return []
-  }
-}
-
 export async function fetchAllIndices(): Promise<{
   "IGP-M": IndiceData[]
-  "IPCA": IndiceData[]
-  "INPC": IndiceData[]
   "Poupança": IndiceData[]
-  "SELIC": IndiceData[]
-  "CDI": IndiceData[]
   timestamp: string
   successCount: number
 }> {
   const results = {
     "IGP-M": [] as IndiceData[],
-    "IPCA": [] as IndiceData[],
-    "INPC": [] as IndiceData[],
     "Poupança": [] as IndiceData[],
-    "SELIC": [] as IndiceData[],
-    "CDI": [] as IndiceData[],
     timestamp: new Date().toISOString(),
     successCount: 0,
   }
 
-  // Fetch from all sources in parallel
-  // NOTE: Using Ipeadata for IGP-M instead of BACEN FGV for more accurate official data
-  const [igpm, ipca, inpc, poupanca, selic, cdi] = await Promise.allSettled([
+  // Fetch from both sources in parallel
+  const [igpm, poupanca] = await Promise.allSettled([
     fetchIGPMFromIpeadata(),
-    fetchIPCAFromIBGE(),
-    fetchINPCFromIBGE(),
     fetchPoupancaFromBC(),
-    fetchSELICFromBC(),
-    fetchCDIFromBC(),
   ])
 
   if (igpm.status === "fulfilled" && igpm.value.length > 0) {
     results["IGP-M"] = igpm.value
     results.successCount++
   }
-  if (ipca.status === "fulfilled" && ipca.value.length > 0) {
-    results["IPCA"] = ipca.value
-    results.successCount++
-  }
-  if (inpc.status === "fulfilled" && inpc.value.length > 0) {
-    results["INPC"] = inpc.value
-    results.successCount++
-  }
   if (poupanca.status === "fulfilled" && poupanca.value.length > 0) {
     results["Poupança"] = poupanca.value
-    results.successCount++
-  }
-  if (selic.status === "fulfilled" && selic.value.length > 0) {
-    results["SELIC"] = selic.value
-    results.successCount++
-  }
-  if (cdi.status === "fulfilled" && cdi.value.length > 0) {
-    results["CDI"] = cdi.value
     results.successCount++
   }
 
@@ -465,25 +178,9 @@ export async function atualizarIndicesNoCache(): Promise<boolean> {
       localStorage.setItem("indices_IGP-M", JSON.stringify(indicesObtidos["IGP-M"]))
       console.log(`[CACHE] ✓ IGP-M: ${indicesObtidos["IGP-M"].length} registros salvos`)
     }
-    if (indicesObtidos["IPCA"].length > 0) {
-      localStorage.setItem("indices_IPCA", JSON.stringify(indicesObtidos["IPCA"]))
-      console.log(`[CACHE] ✓ IPCA: ${indicesObtidos["IPCA"].length} registros salvos`)
-    }
-    if (indicesObtidos["INPC"].length > 0) {
-      localStorage.setItem("indices_INPC", JSON.stringify(indicesObtidos["INPC"]))
-      console.log(`[CACHE] ✓ INPC: ${indicesObtidos["INPC"].length} registros salvos`)
-    }
     if (indicesObtidos["Poupança"].length > 0) {
       localStorage.setItem("indices_Poupança", JSON.stringify(indicesObtidos["Poupança"]))
       console.log(`[CACHE] ✓ Poupança: ${indicesObtidos["Poupança"].length} registros salvos`)
-    }
-    if (indicesObtidos["SELIC"].length > 0) {
-      localStorage.setItem("indices_SELIC", JSON.stringify(indicesObtidos["SELIC"]))
-      console.log(`[CACHE] ✓ SELIC: ${indicesObtidos["SELIC"].length} registros salvos`)
-    }
-    if (indicesObtidos["CDI"].length > 0) {
-      localStorage.setItem("indices_CDI", JSON.stringify(indicesObtidos["CDI"]))
-      console.log(`[CACHE] ✓ CDI: ${indicesObtidos["CDI"].length} registros salvos`)
     }
 
     // Salvar timestamp da última atualização
