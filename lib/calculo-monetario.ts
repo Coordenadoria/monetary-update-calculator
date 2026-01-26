@@ -1096,8 +1096,8 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
       memoriaCalculo.push(`| Parcela | Ciclo | Valor (R$) |`)
       memoriaCalculo.push(`|---------|-------|------------|`)
       
-      // Calcular valor de parcela base (valor original dividido por número de parcelas)
-      const valorParcelaBase = parametros.valorOriginal / numeroParcelas
+      // Calcular valor de parcela base (valor CORRIGIDO dividido por número de parcelas)
+      const valorParcelaBase = valorParcelamentoComIGPM / numeroParcelas
       
       // Rastrear reajustes acumulados para cada parcela
       let reajusteAcumuladoAtual = 1.0
@@ -1278,8 +1278,8 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
       memoriaCalculo.push(`| Parcela | Ciclo | Valor (R$) |`)
       memoriaCalculo.push(`|---------|-------|------------|`)
       
-      // Calcular valor de parcela base (valor original dividido por número de parcelas)
-      const valorParcelaBase = parametros.valorOriginal / numeroParcelas
+      // Calcular valor de parcela base (valor CORRIGIDO dividido por número de parcelas)
+      const valorParcelaBase = valorParcelamentoPoupanca / numeroParcelas
       
       // Rastrear reajustes acumulados para cada parcela
       let reajusteAcumuladoAtualPoupanca = 1.0
