@@ -1051,12 +1051,12 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         memoriaCalculo.push(``)
         memoriaCalculo.push(``)
         
-        cicloAnteriorDetalhes = [{
+        cicloAnteriorDetalhes.push({
           ciclo: ciclo.numero,
           periodo: ciclo.periodoDescricao,
           igpmAcumulado,
           descricao: `Ciclo ${ciclo.numero}: ${igpmAcumulado.toFixed(4)}%`
-        }]
+        })
         
       } else {
         memoriaCalculo.push(`⚠️ AVISO: Período não contém 12 meses completos (encontrados: ${indicesIGPMCiclo.length})`)
@@ -1088,9 +1088,10 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const posicaoNoCiclo = ((i - 1) % 12) + 1 // 1-12 dentro de cada ciclo
         
         // Se mudou de ciclo, aplicar o reajuste do ciclo anterior SOBRE O VALOR TOTAL
-        if (posicaoNoCiclo === 1 && i > 1 && cicloAnteriorDetalhes.length > 0) {
+        if (posicaoNoCiclo === 1 && i > 1 && cicloAnteriorDetalhes.length >= numeroCiclo - 1) {
           // Aplicar reajuste do ciclo anterior para recalcular o valor base do novo ciclo
-          const cicloAnterior = cicloAnteriorDetalhes[cicloAnteriorDetalhes.length - 1]
+          // Para ciclo N, usar cicloAnteriorDetalhes[N-2] (ex: ciclo 2 usa índice 0 = ciclo 1)
+          const cicloAnterior = cicloAnteriorDetalhes[numeroCiclo - 2]
           const fatorReajuste = 1 + cicloAnterior.igpmAcumulado / 100
           valorAtualPorCiclo *= fatorReajuste
         }
@@ -1226,12 +1227,12 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
           memoriaCalculo.push(`Reajuste a ser aplicado: ${igpmAcumulado.toFixed(4)}%`)
           memoriaCalculo.push(``)
           
-          cicloAnteriorDetalhesPoupanca = [{
+          cicloAnteriorDetalhesPoupanca.push({
             ciclo: ciclo.numero,
             periodo: ciclo.periodoDescricao,
             igpmAcumulado,
             descricao: `Ciclo ${ciclo.numero}: ${igpmAcumulado.toFixed(4)}%`
-          }]
+          })
         }
       }
       
@@ -1257,9 +1258,10 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const posicaoNoCiclo = ((i - 1) % 12) + 1 // 1-12 dentro de cada ciclo
         
         // Se mudou de ciclo, aplicar o reajuste do ciclo anterior SOBRE O VALOR TOTAL
-        if (posicaoNoCiclo === 1 && i > 1 && cicloAnteriorDetalhesPoupanca.length > 0) {
+        if (posicaoNoCiclo === 1 && i > 1 && cicloAnteriorDetalhesPoupanca.length >= numeroCiclo - 1) {
           // Aplicar reajuste do ciclo anterior para recalcular o valor base do novo ciclo
-          const cicloAnterior = cicloAnteriorDetalhesPoupanca[cicloAnteriorDetalhesPoupanca.length - 1]
+          // Para ciclo N, usar cicloAnteriorDetalhesPoupanca[N-2] (ex: ciclo 2 usa índice 0 = ciclo 1)
+          const cicloAnterior = cicloAnteriorDetalhesPoupanca[numeroCiclo - 2]
           const fatorReajuste = 1 + cicloAnterior.igpmAcumulado / 100
           valorAtualPorCiclo *= fatorReajuste
         }
