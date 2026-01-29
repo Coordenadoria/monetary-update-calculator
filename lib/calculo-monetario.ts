@@ -1037,36 +1037,30 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const mesesParaUsar = indicesIGPMCiclo.slice(0, 12)
         
         if (mesesParaUsar.length > 0) {
-          // Pegar apenas o ÚLTIMO índice IGP-M disponível (mais recente)
-          const igpmInfo = obterUltimoIndiceIGPM(mesesParaUsar)
-          const igpmAcumulado = igpmInfo.valor
+          // Calcular o IGP-M acumulado de TODOS os 12 meses (ou os disponíveis)
+          // Fórmula: IGP-M acumulado = (1 + m1) × (1 + m2) × ... × (1 + m12) − 1
+          let fatorAcumulado = 1.0
+          for (const indice of mesesParaUsar) {
+            fatorAcumulado *= (1 + indice.valor / 100)
+          }
+          const igpmAcumulado = (fatorAcumulado - 1) * 100
         const fatorIGPM = 1 + igpmAcumulado / 100
         
-        const ultimoIndiceData = igpmInfo.detalhes[0]
+        const ultimoIndiceData = mesesParaUsar[mesesParaUsar.length - 1]
         const nomeMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
-        memoriaCalculo.push(`IGP-M - Último índice disponível: ${nomeMeses[ultimoIndiceData.mes - 1]}/${ultimoIndiceData.ano}: ${igpmAcumulado.toFixed(4)}%`)
+        memoriaCalculo.push(`IGP-M - Período: ${nomeMeses[mesesParaUsar[0].mes - 1]}/${mesesParaUsar[0].ano} a ${nomeMeses[ultimoIndiceData.mes - 1]}/${ultimoIndiceData.ano}`)
         memoriaCalculo.push(``)
         
-        memoriaCalculo.push(`Reajuste a ser aplicado: ${igpmAcumulado.toFixed(4)}%`)
+        memoriaCalculo.push(`Reajuste IGP-M acumulado: ${igpmAcumulado.toFixed(4)}%`)
         memoriaCalculo.push(``)
-                memoriaCalculo.push(``)
-        if (ciclo.numero > 1) {
-          // Aplicar o reajuste IGP-M do ciclo anterior no início deste ciclo
-          const fatorReajusteAnterior = 1 + cicloAnteriorDetalhes[cicloAnteriorDetalhes.length - 1].igpmAcumulado / 100
-          valorParcelamentoComIGPM *= fatorReajusteAnterior
-          
-          memoriaCalculo.push(``)
-          memoriaCalculo.push(`Reajuste aplicado no 1º mês deste ciclo (IGP-M do ciclo anterior): ${cicloAnteriorDetalhes[cicloAnteriorDetalhes.length - 1].igpmAcumulado.toFixed(4)}%`)
-          memoriaCalculo.push(`Fator de reajuste: ${fatorReajusteAnterior.toFixed(10)}`)
-          memoriaCalculo.push(`Valor após reajuste: R$ ${valorParcelamentoComIGPM.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
-        }
+        memoriaCalculo.push(``)
         
-        cicloAnteriorDetalhes = [{
+        cicloAnteriorDetalhes.push({
           ciclo: ciclo.numero,
           periodo: ciclo.periodoDescricao,
           igpmAcumulado,
           descricao: `Ciclo ${ciclo.numero}: ${igpmAcumulado.toFixed(4)}%`
-        }]
+        })
         
       } else {
         memoriaCalculo.push(`⚠️ AVISO: Período não contém 12 meses completos (encontrados: ${indicesIGPMCiclo.length})`)
@@ -1102,9 +1096,9 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const numeroCiclo = Math.ceil(i / 12)
         
         // Se mudou de ciclo, aplicar o reajuste do ciclo anterior
-        if (i > 1 && (i - 1) % 12 === 0 && cicloAnteriorDetalhes.length > 0) {
+        if (i > 1 && (i - 1) % 12 === 0 && cicloAnteriorDetalhes.length > numeroCiclo - 2) {
           // Aplicar reajuste do ciclo anterior para as próximas parcelas
-          const cicloAnterior = cicloAnteriorDetalhes[cicloAnteriorDetalhes.length - 1]
+          const cicloAnterior = cicloAnteriorDetalhes[numeroCiclo - 2]  // cicloAnteriorDetalhes é 0-indexed
           const fatorReajuste = 1 + cicloAnterior.igpmAcumulado / 100
           reajusteAcumuladoAtual *= fatorReajuste
         }
@@ -1252,12 +1246,12 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
             memoriaCalculo.push(`Valor após reajuste: R$ ${valorParcelamentoPoupanca.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`)
           }
           
-          cicloAnteriorDetalhesPoupanca = [{
+          cicloAnteriorDetalhesPoupanca.push({
             ciclo: ciclo.numero,
             periodo: ciclo.periodoDescricao,
             igpmAcumulado,
             descricao: `Ciclo ${ciclo.numero}: ${igpmAcumulado.toFixed(4)}%`
-          }]
+          })
         }
       }
       
@@ -1285,9 +1279,9 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
         const numeroCiclo = Math.ceil(i / 12)
         
         // Se mudou de ciclo, aplicar o reajuste do ciclo anterior
-        if (i > 1 && (i - 1) % 12 === 0 && cicloAnteriorDetalhesPoupanca.length > 0) {
+        if (i > 1 && (i - 1) % 12 === 0 && cicloAnteriorDetalhesPoupanca.length > numeroCiclo - 2) {
           // Aplicar reajuste do ciclo anterior para as próximas parcelas
-          const cicloAnterior = cicloAnteriorDetalhesPoupanca[cicloAnteriorDetalhesPoupanca.length - 1]
+          const cicloAnterior = cicloAnteriorDetalhesPoupanca[numeroCiclo - 2]  // cicloAnteriorDetalhesPoupanca é 0-indexed
           const fatorReajuste = 1 + cicloAnterior.igpmAcumulado / 100
           reajusteAcumuladoAtualPoupanca *= fatorReajuste
         }
