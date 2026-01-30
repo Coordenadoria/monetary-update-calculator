@@ -1086,14 +1086,17 @@ export async function calcularCorrecaoMonetaria(parametros: ParametrosCalculo): 
       // Ciclo 2 (parcelas 13-24): aplica reajuste do ciclo 1
       const ciclosValores: { ciclo: number; valorTotal: number; parcelasNoCiclo: number }[] = []
       
-      let valorCiclo1 = valorParcelamentoComIGPM // Valor total do ciclo 1 (não dividido ainda)
+      // O valor total é para 24 parcelas, mas cada ciclo tem 12
+      // Então o valor base para cálculo é o total dividido apropriadamente
+      let valorCiclo1 = valorParcelamentoComIGPM // Valor base para ciclo 1 (sem divisão ainda)
       ciclosValores.push({ ciclo: 1, valorTotal: valorCiclo1, parcelasNoCiclo: 12 })
       
-      // Se há ciclo 2, aplicar reajuste
+      // Se há ciclo 2, aplicar reajuste ANTES de armazenar o valor
       if (numeroParcelas > 12 && cicloAnteriorDetalhes.length > 0) {
         const cicloAnterior = cicloAnteriorDetalhes[0] // Ciclo 1 está no índice 0
         const fatorReajuste = 1 + cicloAnterior.igpmAcumulado / 100
-        const valorCiclo2 = valorCiclo1 * fatorReajuste // Aplicar reajuste ao valor total
+        // Aplicar reajuste ao valor do ciclo 1, depois armazenar como ciclo 2
+        const valorCiclo2 = valorCiclo1 * fatorReajuste
         ciclosValores.push({ ciclo: 2, valorTotal: valorCiclo2, parcelasNoCiclo: 12 })
       }
       
